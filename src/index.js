@@ -1,7 +1,7 @@
 // src/routes/index.js
 
 const express = require('express');
-const router = express.Router();z
+const router = express.Router();
 
 router.use('/auth', require('./routes/authRoutes'));
 router.use('/products', require('./routes/productRoutes'));

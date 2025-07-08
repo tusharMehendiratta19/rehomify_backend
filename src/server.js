@@ -13,7 +13,7 @@ if (!process.env.MONGO_URI) {
   process.exit(1);
 }
 
-const routes = require('./routes'); // <-- Updated path
+const routes = require('./index'); // <-- Updated path
 
 const PORT = process.env.PORT || 5000;
 
@@ -23,7 +23,7 @@ app.use(helmet()); // Security headers
 app.use(express.json());
 
 // Mount routes
-app.use('/api', routes);
+app.use('/v1', routes);
 
 // Global error handler
 app.use((err, req, res, next) => {
@@ -32,7 +32,7 @@ app.use((err, req, res, next) => {
 });
 
 // Connect to MongoDB and start the server
-mongoose.connect(process.env.MONGO_URI, {
+mongoose.connect("mongodb://rehomify:rehomify%402025@13.233.158.14:27017/rehomify?authSource=rehomify", {
   useNewUrlParser: true,
   useUnifiedTopology: true
 }).then(() => {

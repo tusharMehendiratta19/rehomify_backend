@@ -1,8 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const adminController = require('../controllers/adminController');
-const authenticate = require('../middleware/authenticate');
-const authorize = require('../middleware/authorize'); // restrict to admin
+const authenticate = require('../middlewares/authenticate');
+const authorize = require('../middlewares/authorize'); // restrict to admin
 
 router.use(authenticate, authorize('admin'));
 
