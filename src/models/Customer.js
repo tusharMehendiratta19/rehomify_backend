@@ -23,6 +23,10 @@ const customerSchema = new mongoose.Schema(
       type: String,
       required: false,
     },
+    type: {
+      type: String,
+      required: true,
+    },
     password: {
       type: String,
       required: true,

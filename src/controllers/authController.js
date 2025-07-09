@@ -15,12 +15,12 @@ exports.signup = async (req, res) => {
       const existingCustomer = await Customer.findOne({ email });
       if (existingCustomer) return res.status(400).json({ message: 'Customer already exists' });
 
-      const customer = new Customer({ name, mobileNo, email, password: hashedPassword });
+      const customer = new Customer({ name, mobileNo, email, type, password: hashedPassword });
       let addedData = await customer.save();
       if (addedData) {
         return res.status(200).json({
           status: true,
-          message: 'Customer registered successfully',
+          message: `${type} registered successfully`,
           data: addedData
         });
       }
@@ -29,13 +29,13 @@ exports.signup = async (req, res) => {
       const existingSeller = await Seller.findOne({ mobileNo });
       if (existingSeller) return res.status(400).json({ message: 'Seller already exists' });
 
-      const seller = new Seller({ name, mobileNo, email, password: hashedPassword });
+      const seller = new Seller({ name, mobileNo, email, type, password: hashedPassword });
 
       let addedData = await seller.save();
       if (addedData) {
         return res.status(200).json({
           status: true,
-          message: 'Customer registered successfully',
+          message: `${type} registered successfully`,
           data: addedData
         });
       }
@@ -68,7 +68,48 @@ exports.login = async (req, res) => {
     if (!isMatch) return res.status(400).json({ message: 'Invalid credentials' });
 
     const token = jwt.sign({ id: user._id, role: userType }, JWT_SECRET, { expiresIn: '7d' });
-    return res.status(200).json({ token, role: userType, user, status:true });
+    return res.status(200).json({ token, role: userType, user, status: true });
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
+  }
+};
+
+exports.changePassword = async (req, res) => {
+  try {
+    const { mobileNo, password } = req.body;
+
+    if (!mobileNo || !password) {
+      return res.status(400).json({ message: 'Mobile number and password are required.' });
+    }
+
+    // Search in Customer and Seller collections
+    let user = await Customer.findOne({ mobileNo });
+    let userType = 'customer';
+
+    if (!user) {
+      user = await Seller.findOne({ mobileNo });
+      userType = 'seller';
+    }
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Hash the new password
+    const hashedPassword = await bcrypt.hash(password, 10);
+    user.password = hashedPassword;
+    await user.save();
+
+    const token = jwt.sign({ id: user._id, role: userType }, JWT_SECRET, { expiresIn: '7d' });
+
+    return res.status(200).json({
+      message: 'Password updated successfully',
+      token,
+      role: userType,
+      user,
+      status: true
+    });
+
   } catch (err) {
     return res.status(500).json({ error: err.message });
   }
