@@ -32,7 +32,7 @@ app.use((err, req, res, next) => {
 });
 
 // Connect to MongoDB and start the server
-mongoose.connect("mongodb://rehomify:rehomify%402025@13.233.158.14:27017/rehomify?authSource=rehomify", {
+mongoose.connect(process.env.MONGO_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true
 }).then(() => {
