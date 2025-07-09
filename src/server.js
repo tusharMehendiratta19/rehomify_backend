@@ -31,6 +31,7 @@ app.use((err, req, res, next) => {
   res.status(500).json({ message: 'Something went wrong', error: err.message });
 });
 
+console.log("db url: ", process.env.MONGO_URI)
 // Connect to MongoDB and start the server
 mongoose.connect(process.env.MONGO_URI, {
   useNewUrlParser: true,
