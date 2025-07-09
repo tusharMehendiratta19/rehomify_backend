@@ -15,16 +15,30 @@ exports.signup = async (req, res) => {
       const existingCustomer = await Customer.findOne({ email });
       if (existingCustomer) return res.status(400).json({ message: 'Customer already exists' });
 
-      const customer = new Customer({ name, mobileNo, email, city, password: hashedPassword });
-      await customer.save();
-      return res.status(201).json({ message: 'Customer registered successfully' });
+      const customer = new Customer({ name, mobileNo, email, password: hashedPassword });
+      let addedData = await customer.save();
+      if (addedData) {
+        return res.status(200).json({
+          status: true,
+          message: 'Customer registered successfully',
+          data: addedData
+        });
+      }
+
     } else if (type === 'seller') {
       const existingSeller = await Seller.findOne({ mobileNo });
       if (existingSeller) return res.status(400).json({ message: 'Seller already exists' });
 
-      const seller = new Seller({ name, mobileNo, email, city, password: hashedPassword });
-      await seller.save();
-      return res.status(201).json({ message: 'Seller registered successfully' });
+      const seller = new Seller({ name, mobileNo, email, password: hashedPassword });
+
+      let addedData = await seller.save();
+      if (addedData) {
+        return res.status(200).json({
+          status: true,
+          message: 'Customer registered successfully',
+          data: addedData
+        });
+      }
     } else {
       return res.status(400).json({ message: 'Invalid user type' });
     }
@@ -54,7 +68,7 @@ exports.login = async (req, res) => {
     if (!isMatch) return res.status(400).json({ message: 'Invalid credentials' });
 
     const token = jwt.sign({ id: user._id, role: userType }, JWT_SECRET, { expiresIn: '7d' });
-    return res.status(200).json({ token, role: userType, user });
+    return res.status(200).json({ token, role: userType, user, status:true });
   } catch (err) {
     return res.status(500).json({ error: err.message });
   }
