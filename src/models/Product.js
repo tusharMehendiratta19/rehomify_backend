@@ -6,7 +6,11 @@ const productSchema = new mongoose.Schema({
   name: String,
   description: String,
   price: Number,
-  imageUrl: String,
+  image: String,
+  details: Object,
+  sellerId: String,
+  isNewProduct: Boolean,
+  isRefurbished: Boolean,
 }, { timestamps: true });
 
 module.exports = mongoose.model('Product', productSchema);

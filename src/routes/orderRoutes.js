@@ -5,5 +5,6 @@ const authenticate = require('../middlewares/authenticate');
 
 // GET /api/orders
 router.get('/', authenticate, orderController.getOrders);
+router.post('/addOrder', orderController.addOrder);
 
 module.exports = router;

@@ -1,14 +1,19 @@
 const mongoose = require('mongoose');
 
 const orderSchema = new mongoose.Schema({
-  customer: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-  products: [{
-    product: { type: mongoose.Schema.Types.ObjectId, ref: 'Product' },
-    quantity: Number
-  }],
-  orderDate: Date,
-  deliveryDate: Date,
-  status: { type: String, enum: ['placed', 'shipped', 'delivered'], default: 'placed' }
+  customerId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  productId: { type: mongoose.Schema.Types.ObjectId, ref: 'Product', required: true },
+  quantity: { type: Number, required: true },
+  sellerId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },  // sellerId for each product
+  isNewProduct: { type: Boolean, default: true },
+  isRefurbished: { type: Boolean, default: false },
+  orderDate: { type: Date, default: Date.now },
+  deliveryDate: { type: Date },
+  status: {
+    type: String,
+    enum: ['placed', 'shipped', 'delivered', 'cancelled', "out for delivery"],
+    default: 'placed'
+  }
 }, { timestamps: true });
 
 module.exports = mongoose.model('Order', orderSchema);

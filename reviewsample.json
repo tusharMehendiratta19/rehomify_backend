@@ -1,0 +1,47 @@
+[
+  {
+    "customerName": "Priya Mehta",
+    "imageUrl": "https://randomuser.me/api/portraits/women/44.jpg",
+    "productId": "64c88f887e2343fbcbb60f31",
+    "orderId": "64c890127e2343fbcbb60f81",
+    "rating": 5,
+    "comment": "Amazing quality and fast delivery. Highly recommend!",
+    "date": "2025-07-10T10:30:00.000Z"
+  },
+  {
+    "customerName": "Anita Sharma",
+    "imageUrl": "https://randomuser.me/api/portraits/women/45.jpg",
+    "productId": "64c88f887e2343fbcbb60f32",
+    "orderId": "64c890127e2343fbcbb60f82",
+    "rating": 4,
+    "comment": "Product was good, but delivery took a bit longer than expected.",
+    "date": "2025-07-09T14:15:00.000Z"
+  },
+  {
+    "customerName": "Neha Kapoor",
+    "imageUrl": "https://randomuser.me/api/portraits/women/46.jpg",
+    "productId": "64c88f887e2343fbcbb60f33",
+    "orderId": "64c890127e2343fbcbb60f83",
+    "rating": 3,
+    "comment": "Average experience. The product was okay for the price.",
+    "date": "2025-07-08T09:45:00.000Z"
+  },
+  {
+    "customerName": "Ritika Verma",
+    "imageUrl": "https://randomuser.me/api/portraits/women/47.jpg",
+    "productId": "64c88f887e2343fbcbb60f34",
+    "orderId": "64c890127e2343fbcbb60f84",
+    "rating": 2,
+    "comment": "Product was damaged on arrival. Customer support was helpful though.",
+    "date": "2025-07-07T11:20:00.000Z"
+  },
+  {
+    "customerName": "Sonal Bhatia",
+    "imageUrl": "https://randomuser.me/api/portraits/women/48.jpg",
+    "productId": "64c88f887e2343fbcbb60f35",
+    "orderId": "64c890127e2343fbcbb60f85",
+    "rating": 5,
+    "comment": "Top-notch product! Will definitely order again.",
+    "date": "2025-07-06T16:00:00.000Z"
+  }
+]
