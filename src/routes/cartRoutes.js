@@ -4,6 +4,9 @@ const cartController = require('../controllers/cartController');
 const authenticate = require('../middlewares/authenticate');
 
 // GET /api/cart
-router.get('/', authenticate, cartController.getCartItems);
+router.post('/getCartItems', cartController.getCartItems);
+router.post('/addToCart', cartController.addToCart);
+router.post('/removeFromCart', cartController.removeFromCart);
+router.post('/updateCart', cartController.updateCart);
 
 module.exports = router;
