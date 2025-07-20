@@ -18,10 +18,16 @@ exports.signup = async (req, res) => {
       const customer = new Customer({ name, mobileNo, email, type, password: hashedPassword });
       let addedData = await customer.save();
       if (addedData) {
+        const token = jwt.sign({ id: addedData._id, role: data.type }, JWT_SECRET, { expiresIn: '7d' });
+        addedData = addedData.toObject();
+        delete addedData.password;
+        delete addedData.__v;
+
         return res.status(200).json({
           status: true,
           message: `${type} registered successfully`,
-          data: addedData
+          data: addedData,
+          token
         });
       }
 
@@ -33,10 +39,16 @@ exports.signup = async (req, res) => {
 
       let addedData = await seller.save();
       if (addedData) {
+        const token = jwt.sign({ id: addedData._id, role: data.type }, JWT_SECRET, { expiresIn: '7d' });
+        addedData = addedData.toObject();
+        delete addedData.password; // Remove password from response
+        delete addedData.__v; // Remove version key from response
+
         return res.status(200).json({
           status: true,
           message: `${type} registered successfully`,
-          data: addedData
+          data: addedData,
+          token
         });
       }
     } else {

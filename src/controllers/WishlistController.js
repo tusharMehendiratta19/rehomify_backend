@@ -39,7 +39,7 @@ exports.addToWishlist = async (req, res) => {
     }
 
     if (customer.wishlist.includes(productId)) {
-      return res.status(400).json({ error: 'Product already in wishlist' });
+      return res.status(200).json({ status: false, message: 'wishlisted already' });
     }
 
     customer.wishlist.push(productId);
