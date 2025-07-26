@@ -66,3 +66,30 @@ exports.getProductById = async (req, res) => {
     return res.status(500).json({ error: err.message });
   }
 };
+
+exports.getProductBySearch = async (req, res) => {
+  try {
+    const searchQuery = req.query.q;
+
+    if (!searchQuery) {
+      return res.status(400).json({ message: 'Search query is required' });
+    }
+
+    const products = await Product.find({
+      $or: [
+        { name: { $regex: searchQuery, $options: 'i' } },
+        { color: { $regex: searchQuery, $options: 'i' } },
+        { category: { $regex: searchQuery, $options: 'i' } },
+        { description: { $regex: searchQuery, $options: 'i' } }
+      ]
+    });
+
+    if (products.length === 0) {
+      return res.status(404).json({ message: 'No products found' });
+    }
+
+    return res.status(200).json(products);
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
+  }
+}

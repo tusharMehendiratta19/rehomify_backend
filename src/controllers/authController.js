@@ -79,7 +79,7 @@ exports.login = async (req, res) => {
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) return res.status(400).json({ message: 'Invalid credentials' });
 
-    const token = jwt.sign({ id: user._id, role: userType }, JWT_SECRET, { expiresIn: '7d' });
+    const token = jwt.sign({ id: user._id, role: userType }, JWT_SECRET, { expiresIn: '1d' });
     return res.status(200).json({ token, role: userType, user, status: true });
   } catch (err) {
     return res.status(500).json({ error: err.message });
@@ -122,6 +122,73 @@ exports.changePassword = async (req, res) => {
       status: true
     });
 
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
+  }
+};
+
+exports.getCustomerDetails = async (req, res) => {
+  try {
+    const custId = req.params.id;
+
+    if (!custId) {
+      return res.status(400).json({ message: 'Customer not found. Please sign up.' });
+    }
+
+    const customer = await Customer.findById(custId).select('-password -__v');
+    if (!customer) {
+      return res.status(404).json({ message: 'Customer not found' });
+    }
+    return res.status(200).json({ status: true, data: customer });
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
+  }
+};
+
+exports.saveCustomerDetails = async (req, res) => {
+  try {
+    const { id, name, mobileNo, email } = req.body;
+
+    if (!id) {
+      return res.status(400).json({ message: 'Customer ID is required' });
+    }
+
+    const customer = await Customer.findById(id);
+    console.log(customer);
+    if (!customer) {
+      return res.status(404).json({ message: 'Customer not found' });
+    }
+    customer.name = name || customer.name;
+    customer.mobileNo = mobileNo || customer.mobileNo;
+    customer.email = email || customer.email;
+    const updatedCustomer = await customer.save();
+    return res.status(200).json({ status: true, message: 'Customer details updated successfully', data: updatedCustomer });
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
+  }
+};
+
+exports.saveCustomerAddress = async (req, res) => {
+  try {
+    const { custId, name, addressLine1, addressLine2, landmark, pinCode, city, state } = req.body;
+
+    if (!custId) {
+      return res.status(400).json({ message: 'Customer ID is required' });
+    }
+
+    const customer = await Customer.findById(custId);
+    if (!customer) {
+      return res.status(404).json({ message: 'Customer not found' });
+    }
+    customer.address.name = name || customer.name;
+    customer.address.addressLine1 = addressLine1 || customer.addressLine1;
+    customer.address.addressLine2 = addressLine2 || customer.addressLine2;
+    customer.address.landmark = landmark || customer.landmark;
+    customer.address.pinCode = pinCode || customer.pinCode;
+    customer.address.city = city || customer.city;
+    customer.address.state = state || customer.state;
+    const updatedCustomer = await customer.save();
+    return res.status(200).json({ status: true, message: 'Customer address updated successfully', data: updatedCustomer });
   } catch (err) {
     return res.status(500).json({ error: err.message });
   }

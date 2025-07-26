@@ -31,6 +31,36 @@ const customerSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    address: {
+      name: {
+        type: String,
+        required: false,
+      },
+      addressLine1: {
+        type: String,
+        required: false,
+      },
+      addressLine2: {
+        type: String,
+        required: false,
+      },
+      landmark: {
+        type: String,
+        required: false,
+      },
+      pinCode: {
+        type: String,
+        required: false,
+      },
+      city: {
+        type: String,
+        required: false,
+      },
+      state: {
+        type: String,
+        required: false,
+      }
+    },
     cart: [
       {
         productId: {
