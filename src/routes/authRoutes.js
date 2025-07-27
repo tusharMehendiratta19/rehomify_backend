@@ -11,5 +11,6 @@ router.post('/changePassword', authController.changePassword);
 router.get('/getCustomerDetails/:id', authController.getCustomerDetails);
 router.post('/saveCustomerDetails', authController.saveCustomerDetails);
 router.post('/saveCustomerAddress', authController.saveCustomerAddress);
+router.post('/saveOrder', authController.saveOrder);
 
 module.exports = router;

@@ -193,3 +193,39 @@ exports.saveCustomerAddress = async (req, res) => {
     return res.status(500).json({ error: err.message });
   }
 };
+
+exports.saveOrder = async (req, res) => {
+  try {
+    const { orderId, customerId } = req.body;
+
+    if (!orderId || !customerId) {
+      return res.status(400).json({ message: 'Order ID and Customer ID are required' });
+    }
+
+    // Find the customer by customerId
+    const customer = await Customer.findById(customerId);
+    if (!customer) {
+      return res.status(404).json({ message: 'Customer not found' });
+    }
+
+    // Initialize orders array if not present
+    if (!Array.isArray(customer.orders)) {
+      customer.orders = [];
+    }
+
+    // Add the new orderId to the orders array
+    customer.orders.push(orderId);
+
+    // Optionally, you can store more order details if needed
+    // Save the updated customer document
+    let result = await customer.save();
+
+    // For response, you can return the updated customer or just a success message
+    // const order = { orderId, customerId, productId };
+
+    // await order.save();
+    return res.status(201).json({ status: true, message: 'Order saved successfully', data: result });
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
+  }
+};

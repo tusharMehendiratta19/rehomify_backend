@@ -81,6 +81,18 @@ const customerSchema = new mongoose.Schema(
         ref: 'Product',
       }
     ],
+    orders: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Order',
+      }
+    ],
+    resoldOrders: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'ResellOrder',
+      }
+    ],
   },
   {
     timestamps: true,

@@ -1,32 +1,64 @@
+const Customer = require('../models/Customer');
 const Order = require('../models/Order');
 const Product = require('../models/Product');
+const mongoose = require("mongoose");
 
 exports.getOrders = async (req, res) => {
   try {
-    const userId = req.user.id; // Assumes authentication middleware sets req.user
-    const orders = await Order.find({ user: userId })
-      .populate('products.product', 'category name description price imageUrl');
+    const customerId = req.params.custId;
 
-    const formattedOrders = orders.map(order => ({
-      id: order._id,
-      orderDate: order.orderDate,
-      deliveryDate: order.deliveryDate,
-      status: order.status,
-      products: order.products.map(p => ({
-        id: p.product._id,
-        category: p.product.category,
-        name: p.product.name,
-        description: p.product.description,
-        price: p.product.price,
-        imageUrl: p.product.imageUrl
-      }))
-    }));
+    // Validate customerId as ObjectId
+    if (!mongoose.Types.ObjectId.isValid(customerId)) {
+      return res.status(400).json({ message: "Invalid customer ID" });
+    }
+
+    // Step 1: Find orders for the customer and get all productIds
+    const orders = await Order.find({ customerId }).select("productId quantity createdAt deliveryDate status");
+
+    if (!orders.length) {
+      return res.status(404).json({ message: "No orders found for this customer" });
+    }
+
+    const productIds = orders.map(order => order.productId);
+
+    // Step 2: Fetch all matching products
+    const products = await Product.find({ _id: { $in: productIds } }).select("category name description price image");
+
+    console.log("products: ", products);
+
+    // Step 3: Create a map of productId to product for fast lookup
+    const productMap = new Map();
+    products.forEach(product => {
+      productMap.set(product._id.toString(), product);
+    });
+
+    // Step 4: Format the order list
+    const formattedOrders = orders.map(order => {
+      const product = productMap.get(order.productId.toString());
+
+      return {
+        id: order._id,
+        orderDate: order.createdAt,
+        deliveryDate: order.deliveryDate,
+        status: order.status,
+        quantity: order.quantity,
+        product: product ? {
+          id: product._id,
+          category: product.category,
+          name: product.name,
+          description: product.description,
+          price: product.price,
+          imageUrl: product.image,
+        } : null,
+      };
+    });
 
     return res.status(200).json(formattedOrders);
   } catch (err) {
     return res.status(500).json({ error: err.message });
   }
 };
+
 
 exports.addOrder = async (req, res) => {
   try {
@@ -43,7 +75,7 @@ exports.addOrder = async (req, res) => {
 
     if (!product) {
       return res.status(404).json({ message: "Product not found" });
-    } 
+    }
     // else {
     //   return res.send({
     //     status: true,
@@ -61,12 +93,12 @@ exports.addOrder = async (req, res) => {
       status: "placed"
     });
 
-    await newOrder.save();
+    const result = await newOrder.save();
 
     res.status(201).json({
       status: true,
       message: "Order placed successfully",
-      order: newOrder
+      order: result
     });
   } catch (error) {
     console.error("Error placing order:", error);
