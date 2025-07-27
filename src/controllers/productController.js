@@ -15,7 +15,7 @@ exports.addProduct = async (req, res) => {
   try {
     const { sellerId, name, description, price, category, color, isRefurbished, width, length, height, woodMaterial } = req.body;
     const file = req.file;
-
+    const isNewProduct = isRefurbished == 'false' ? true : false;
     console.log('Received file:', file);
     console.log('Received body:', req.body);
 
@@ -46,7 +46,7 @@ exports.addProduct = async (req, res) => {
       image: imageUrl,
       sellerId,
       isRefurbished,
-      isNewProduct: !isRefurbished,
+      isNewProduct,
       width: parseFloat(width),
       height: parseFloat(height),
       length: parseFloat(length),
