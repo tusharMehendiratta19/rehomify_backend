@@ -1,4 +1,67 @@
+const AWS = require('aws-sdk');
+const { v4: uuidv4 } = require('uuid');
 const Product = require('../models/Product');
+
+// AWS S3 Configuration
+AWS.config.update({
+  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+  region: process.env.AWS_REGION,
+});
+
+const s3 = new AWS.S3();
+
+exports.addProduct = async (req, res) => {
+  try {
+    const { sellerId, name, description, price, category, color, isRefurbished, width, length, height, woodMaterial } = req.body;
+    const file = req.file;
+
+    console.log('Received file:', file);
+    console.log('Received body:', req.body);
+
+    // Validate required fields
+    if (!sellerId || !name || !description || !price || !category || !color || !file || !isRefurbished || !width || !length || !height || !woodMaterial) {
+      return res.status(400).json({ message: 'All fields including image are required' });
+    }
+
+    // Upload image to S3
+    const fileKey = `products/${uuidv4()}_${file.originalname}`;
+    const uploadResult = await s3.upload({
+      Bucket: process.env.AWS_BUCKET_NAME,
+      Key: fileKey,
+      Body: file.buffer,
+      ContentType: file.mimetype,
+      ACL:'public-read', // Make the file publicly readable
+    }).promise();
+
+    const imageUrl = uploadResult.Location;
+
+    // Create product with image URL
+    const newProduct = new Product({
+      name,
+      description,
+      price,
+      category,
+      color,
+      image: imageUrl,
+      sellerId,
+      isRefurbished,
+      isNewProduct: !isRefurbished,
+      width: parseFloat(width),
+      height: parseFloat(height),
+      length: parseFloat(length),
+      woodMaterial,
+    });
+
+    const savedProduct = await newProduct.save();
+
+    return res.status(201).json({ status: true, message: 'Product added successfully', data: savedProduct });
+  } catch (err) {
+    console.error('Error in addProduct:', err);
+    return res.status(500).json({ error: err.message });
+  }
+};
+
 
 // GET all products categorized
 exports.getAllcatProducts = async (req, res) => {

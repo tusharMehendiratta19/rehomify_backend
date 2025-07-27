@@ -7,10 +7,14 @@ const productSchema = new mongoose.Schema({
   description: String,
   price: Number,
   image: String,
-  details: Object,
   sellerId: String,
   isNewProduct: Boolean,
   isRefurbished: Boolean,
+  width: Number,
+  height: Number,
+  length: Number,
+  color: String,
+  woodMaterial: String,
 }, { timestamps: true });
 
 module.exports = mongoose.model('Product', productSchema);
