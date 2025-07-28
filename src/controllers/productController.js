@@ -114,7 +114,7 @@ exports.getAllProducts = async (req, res) => {
       color: 1,
       image: 1,
       deliveryTime: 1
-    });
+    },{sort: { createdAt: -1 }});
 
     const categorizedProducts = {};
 
