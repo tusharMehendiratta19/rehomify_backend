@@ -1,51 +1,90 @@
 const AWS = require('aws-sdk');
 const { v4: uuidv4 } = require('uuid');
 const Product = require('../models/Product');
+const e = require('express');
 
-// AWS S3 Configuration
-AWS.config.update({
-  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+const s3 = new AWS.S3({
+  accessKeyId: process.env.AWS_ACCESS_KEY,
+  secretAccessKey: process.env.AWS_SECRET_KEY,
   region: process.env.AWS_REGION,
 });
 
-const s3 = new AWS.S3();
-
 exports.addProduct = async (req, res) => {
   try {
-    const { sellerId, name, description, price, category, color, isRefurbished, width, length, height, woodMaterial } = req.body;
-    const file = req.file;
-    const isNewProduct = isRefurbished == 'false' ? true : false;
-    console.log('Received file:', file);
-    console.log('Received body:', req.body);
+    const {
+      sellerId,
+      name,
+      description,
+      price,
+      category,
+      color,
+      isRefurbished,
+      width,
+      length,
+      height,
+      woodMaterial
+    } = req.body;
 
-    // Validate required fields
-    if (!sellerId || !name || !description || !price || !category || !color || !file || !isRefurbished || !width || !length || !height || !woodMaterial) {
-      return res.status(400).json({ message: 'All fields including image are required' });
+    const files = req.files || {};
+    const mainImageFile = files.mainImage?.[0];
+    const optionalImageFiles = files.optionalImages || [];
+
+    const isNewProduct = isRefurbished === 'false';
+
+    // Log inputs
+    console.log('Received body:', req.body);
+    console.log('Main Image:', mainImageFile);
+    console.log('Optional Images:', optionalImageFiles.length);
+
+    // Validation
+    if (
+      !sellerId || !name || !description || !price || !category || !color ||
+      !isRefurbished || !width || !length || !height || !woodMaterial || !mainImageFile
+    ) {
+      return res.status(400).json({ message: 'All fields including main image are required' });
     }
 
-    // Upload image to S3
-    const fileKey = `products/${uuidv4()}_${file.originalname}`;
-    const uploadResult = await s3.upload({
+    // Upload main image to S3
+    const mainImageKey = `products/${uuidv4()}_${mainImageFile.originalname}`;
+    const mainUploadResult = await s3.upload({
       Bucket: process.env.AWS_BUCKET_NAME,
-      Key: fileKey,
-      Body: file.buffer,
-      ContentType: file.mimetype,
-      ACL:'public-read', // Make the file publicly readable
+      Key: mainImageKey,
+      Body: mainImageFile.buffer,
+      ContentType: mainImageFile.mimetype,
+      ACL: 'public-read',
     }).promise();
 
-    const imageUrl = uploadResult.Location;
+    const mainImageUrl = mainUploadResult.Location;
 
-    // Create product with image URL
+    // Upload optional images to S3
+    const optionalImageUrls = [];
+
+    for (let i = 0; i < optionalImageFiles.length; i++) {
+      const file = optionalImageFiles[i];
+      const key = `products/optional/${uuidv4()}_${file.originalname}`;
+
+      const uploadResult = await s3.upload({
+        Bucket: process.env.AWS_BUCKET_NAME,
+        Key: key,
+        Body: file.buffer,
+        ContentType: file.mimetype,
+        ACL: 'public-read',
+      }).promise();
+
+      optionalImageUrls.push(uploadResult.Location);
+    }
+
+    // Create and save product
     const newProduct = new Product({
       name,
       description,
       price,
       category,
       color,
-      image: imageUrl,
+      image: mainImageUrl,
+      optionalImages: optionalImageUrls,
       sellerId,
-      isRefurbished,
+      isRefurbished: isRefurbished === 'true',
       isNewProduct,
       width: parseFloat(width),
       height: parseFloat(height),
@@ -55,7 +94,11 @@ exports.addProduct = async (req, res) => {
 
     const savedProduct = await newProduct.save();
 
-    return res.status(201).json({ status: true, message: 'Product added successfully', data: savedProduct });
+    return res.status(201).json({
+      status: true,
+      message: 'Product added successfully',
+      data: savedProduct
+    });
   } catch (err) {
     console.error('Error in addProduct:', err);
     return res.status(500).json({ error: err.message });
@@ -113,8 +156,15 @@ exports.getAllProducts = async (req, res) => {
       price: 1,
       color: 1,
       image: 1,
-      deliveryTime: 1
-    },{sort: { createdAt: -1 }});
+      deliveryTime: 1,
+      width: 1,
+      height: 1,
+      length: 1,
+      woodMaterial: 1,
+      isRefurbished: 1,
+      isNewProduct: 1,
+      optionalImages: 1
+    }, { sort: { createdAt: -1 } });
 
     const categorizedProducts = {};
 
@@ -133,7 +183,14 @@ exports.getAllProducts = async (req, res) => {
         category: product.category,
         price: product.price,
         color: product.color,
-        image: product.image
+        image: product.image,
+        width: product.width,
+        height: product.height,
+        length: product.length,
+        woodMaterial: product.woodMaterial,
+        isRefurbished: product.isRefurbished,
+        isNewProduct: product.isNewProduct,
+        optionalImages: product.optionalImages
       });
     });
 
@@ -195,3 +252,95 @@ exports.getProductBySearch = async (req, res) => {
     return res.status(500).json({ error: err.message });
   }
 }
+
+exports.editProductById = async (req, res) => {
+  try {
+    const productId = req.params.id;
+
+    const product = await Product.findOne({ _id: productId });
+    if (!product) {
+      return res.status(404).json({ message: "Product not found" });
+    }
+    return res.status(200).json({
+      id: product.id,
+      name: product.name,
+      description: product.description,
+      price: product.price,
+      color: product.color,
+      width: product.width,
+      woodMaterial: product.woodMaterial,
+      length: product.length,
+      height: product.height,
+      category: product.category,
+      image: product.image,
+    });
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
+  }
+};
+
+exports.deleteProductById = async (req, res) => {
+  try {
+    const productId = req.params.id;
+
+    const product = await Product.findOneAndDelete({ _id: productId });
+    if (!product) {
+      return res.status(404).json({ message: "Product not found", data: product });
+    }
+    return res.status(200).json({ message: "Product deleted successfully" });
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
+  }
+};
+
+exports.updatedProductById = async (req, res) => {
+  try {
+    const productId = req.params.id;
+    const {
+      name,
+      description,
+      price,
+      category,
+      color,
+      width,
+      length,
+      height,
+      woodMaterial
+    } = req.body;
+
+    // Validation
+    if (
+      !name || !description || !price || !category || !color || !width || !length || !height || !woodMaterial
+    ) {
+      return res.status(400).json({ message: 'All fields are required' });
+    }
+
+    // Find existing product
+    const product = await Product.findOne({ _id: productId });
+    if (!product) {
+      return res.status(404).json({ message: "Product not found" });
+    }
+
+    // Update product details
+    product.name = name;
+    product.description = description;
+    product.price = price;
+    product.category = category;
+    product.color = color;
+    product.width = parseFloat(width);
+    product.height = parseFloat(height);
+    product.length = parseFloat(length);
+    product.woodMaterial = woodMaterial;
+
+    // Save updated product
+    const updatedProduct = await product.save();
+    return res.status(200).json({
+      status: true,
+      message: 'Product updated successfully',
+      data: updatedProduct
+    });
+  } catch (err) {
+    console.error('Error in updatedProductById:', err);
+    return res.status(500).json({ error: err.message });
+  }
+};
