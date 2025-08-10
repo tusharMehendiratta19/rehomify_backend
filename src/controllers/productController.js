@@ -296,6 +296,7 @@ exports.editProductById = async (req, res) => {
       height: product.height,
       category: product.category,
       image: product.image,
+      varieties: product.varieties
     });
   } catch (err) {
     return res.status(500).json({ error: err.message });
@@ -322,18 +323,18 @@ exports.updatedProductById = async (req, res) => {
     const {
       name,
       description,
-      price,
       category,
       color,
       width,
       length,
       height,
-      woodMaterial
+      woodMaterial,
+      varieties
     } = req.body;
 
     // Validation
     if (
-      !name || !description || !price || !category || !color || !width || !length || !height || !woodMaterial
+      !name || !description || !varieties || !category || !color || !width || !length || !height || !woodMaterial
     ) {
       return res.status(400).json({ message: 'All fields are required' });
     }
@@ -347,13 +348,14 @@ exports.updatedProductById = async (req, res) => {
     // Update product details
     product.name = name;
     product.description = description;
-    product.price = price;
+    // product.price = price;
     product.category = category;
     product.color = color;
     product.width = parseFloat(width);
     product.height = parseFloat(height);
     product.length = parseFloat(length);
     product.woodMaterial = woodMaterial;
+    product.varieties = varieties;
 
     // Save updated product
     const updatedProduct = await product.save();
