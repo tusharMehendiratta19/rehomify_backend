@@ -22,7 +22,7 @@ exports.addProduct = async (req, res) => {
       length,
       height,
       woodMaterial,
-      varieties // Array of { variety, price }
+      varieties // Array of { variety, price } or { name, price }
     } = req.body;
 
     const files = req.files || {};
@@ -42,6 +42,12 @@ exports.addProduct = async (req, res) => {
     } else if (Array.isArray(varieties)) {
       parsedVarieties = varieties;
     }
+
+    // Convert "name" → "variety" to match schema
+    parsedVarieties = parsedVarieties.map(v => ({
+      name: v.name, // handle both formats
+      price: v.price
+    }));
 
     // Validation
     if (
@@ -85,7 +91,7 @@ exports.addProduct = async (req, res) => {
       description,
       category,
       color,
-      price: varieties[0].price,
+      price: parsedVarieties[0].price, // default price from first variety
       image: mainImageUrl,
       optionalImages: optionalImageUrls,
       sellerId,
@@ -95,7 +101,7 @@ exports.addProduct = async (req, res) => {
       height: parseFloat(height),
       length: parseFloat(length),
       woodMaterial,
-      varieties: parsedVarieties // store array of { variety, price }
+      varieties: parsedVarieties
     });
 
     const savedProduct = await newProduct.save();
@@ -110,6 +116,7 @@ exports.addProduct = async (req, res) => {
     return res.status(500).json({ error: err.message });
   }
 };
+
 
 
 
