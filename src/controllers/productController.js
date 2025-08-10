@@ -85,6 +85,7 @@ exports.addProduct = async (req, res) => {
       description,
       category,
       color,
+      price: varieties[0].price,
       image: mainImageUrl,
       optionalImages: optionalImageUrls,
       sellerId,
