@@ -15,14 +15,14 @@ exports.addProduct = async (req, res) => {
       sellerId,
       name,
       description,
-      price,
       category,
       color,
       isRefurbished,
       width,
       length,
       height,
-      woodMaterial
+      woodMaterial,
+      varieties // Array of { variety, price }
     } = req.body;
 
     const files = req.files || {};
@@ -31,20 +31,28 @@ exports.addProduct = async (req, res) => {
 
     const isNewProduct = isRefurbished === 'false';
 
-    // Log inputs
-    console.log('Received body:', req.body);
-    console.log('Main Image:', mainImageFile);
-    console.log('Optional Images:', optionalImageFiles.length);
+    // Parse varieties if sent as JSON string
+    let parsedVarieties = [];
+    if (typeof varieties === 'string') {
+      try {
+        parsedVarieties = JSON.parse(varieties);
+      } catch (err) {
+        return res.status(400).json({ message: 'Invalid varieties format' });
+      }
+    } else if (Array.isArray(varieties)) {
+      parsedVarieties = varieties;
+    }
 
     // Validation
     if (
-      !sellerId || !name || !description || !price || !category || !color ||
-      !isRefurbished || !width || !length || !height || !woodMaterial || !mainImageFile
+      !sellerId || !name || !description || !category || !color ||
+      !isRefurbished || !width || !length || !height || !woodMaterial || !mainImageFile ||
+      parsedVarieties.length === 0
     ) {
-      return res.status(400).json({ message: 'All fields including main image are required' });
+      return res.status(400).json({ message: 'All fields including main image and varieties are required' });
     }
 
-    // Upload main image to S3
+    // Upload main image
     const mainImageKey = `products/${uuidv4()}_${mainImageFile.originalname}`;
     const mainUploadResult = await s3.upload({
       Bucket: process.env.AWS_BUCKET_NAME,
@@ -56,13 +64,11 @@ exports.addProduct = async (req, res) => {
 
     const mainImageUrl = mainUploadResult.Location;
 
-    // Upload optional images to S3
+    // Upload optional images
     const optionalImageUrls = [];
-
     for (let i = 0; i < optionalImageFiles.length; i++) {
       const file = optionalImageFiles[i];
       const key = `products/optional/${uuidv4()}_${file.originalname}`;
-
       const uploadResult = await s3.upload({
         Bucket: process.env.AWS_BUCKET_NAME,
         Key: key,
@@ -70,15 +76,13 @@ exports.addProduct = async (req, res) => {
         ContentType: file.mimetype,
         ACL: 'public-read',
       }).promise();
-
       optionalImageUrls.push(uploadResult.Location);
     }
 
-    // Create and save product
+    // Save product with varieties
     const newProduct = new Product({
       name,
       description,
-      price,
       category,
       color,
       image: mainImageUrl,
@@ -90,6 +94,7 @@ exports.addProduct = async (req, res) => {
       height: parseFloat(height),
       length: parseFloat(length),
       woodMaterial,
+      varieties: parsedVarieties // store array of { variety, price }
     });
 
     const savedProduct = await newProduct.save();
@@ -104,6 +109,7 @@ exports.addProduct = async (req, res) => {
     return res.status(500).json({ error: err.message });
   }
 };
+
 
 
 // GET all products categorized
@@ -146,30 +152,37 @@ exports.getAllcatProducts = async (req, res) => {
     return res.status(500).json({ error: err.message });
   }
 };
+
 exports.getAllProducts = async (req, res) => {
   try {
-    const products = await Product.find({}, {
-      id: 1,
-      category: 1,
-      name: 1,
-      description: 1,
-      price: 1,
-      color: 1,
-      image: 1,
-      deliveryTime: 1,
-      width: 1,
-      height: 1,
-      length: 1,
-      woodMaterial: 1,
-      isRefurbished: 1,
-      isNewProduct: 1,
-      optionalImages: 1
-    }, { sort: { createdAt: -1 } });
+    const products = await Product.find(
+      {},
+      {
+        id: 1,
+        category: 1,
+        name: 1,
+        description: 1,
+        price: 1,
+        color: 1,
+        image: 1,
+        deliveryTime: 1,
+        width: 1,
+        height: 1,
+        length: 1,
+        woodMaterial: 1,
+        isRefurbished: 1,
+        isNewProduct: 1,
+        optionalImages: 1,
+        varieties: 1, // <-- Ensure we fetch varieties
+      },
+      { sort: { createdAt: -1 } }
+    );
 
     const categorizedProducts = {};
 
-    products.forEach(product => {
-      const key = product.category?.toLowerCase().replace(/\s/g, "_") || "uncategorized";
+    products.forEach((product) => {
+      const key =
+        product.category?.toLowerCase().replace(/\s/g, "_") || "uncategorized";
 
       if (!categorizedProducts[key]) {
         categorizedProducts[key] = [];
@@ -190,7 +203,8 @@ exports.getAllProducts = async (req, res) => {
         woodMaterial: product.woodMaterial,
         isRefurbished: product.isRefurbished,
         isNewProduct: product.isNewProduct,
-        optionalImages: product.optionalImages
+        optionalImages: product.optionalImages || [],
+        varieties: product.varieties || [], // <-- Pass varieties to frontend
       });
     });
 
@@ -199,6 +213,7 @@ exports.getAllProducts = async (req, res) => {
     return res.status(500).json({ error: err.message });
   }
 };
+
 
 // ✅ GET single product by ID
 exports.getProductById = async (req, res) => {

@@ -14,6 +14,7 @@ exports.getCartItems = async (req, res) => {
 
     const items = customer.cart.map(item => {
       const product = item.productId;
+      console.log("products>>> ",customer)
       return {
         id: product._id,
         category: product.category,
