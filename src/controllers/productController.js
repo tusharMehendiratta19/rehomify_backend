@@ -71,6 +71,7 @@ exports.addProduct = async (req, res) => {
     const mainImageUrl = mainUploadResult.Location;
 
     // Upload optional images
+
     const optionalImageUrls = [];
     for (let i = 0; i < optionalImageFiles.length; i++) {
       const file = optionalImageFiles[i];
@@ -339,6 +340,24 @@ exports.updatedProductById = async (req, res) => {
       return res.status(400).json({ message: 'All fields are required' });
     }
 
+    const files = req.files || {};
+    // const mainImageFile = files.mainImage?.[0];
+    const optionalImageFiles = files.optionalImages || [];
+    const optionalImageUrls = [];
+
+    for (let i = 0; i < optionalImageFiles.length; i++) {
+      const file = optionalImageFiles[i];
+      const key = `products/optional/${uuidv4()}_${file.originalname}`;
+      const uploadResult = await s3.upload({
+        Bucket: process.env.AWS_BUCKET_NAME,
+        Key: key,
+        Body: file.buffer,
+        ContentType: file.mimetype,
+        ACL: 'public-read',
+      }).promise();
+      optionalImageUrls.push(uploadResult.Location);
+    }
+
     // Find existing product
     const product = await Product.findOne({ _id: productId });
     if (!product) {
@@ -356,6 +375,7 @@ exports.updatedProductById = async (req, res) => {
     product.length = parseFloat(length);
     product.woodMaterial = woodMaterial;
     product.varieties = varieties;
+    product.optionalImages = optionalImageUrls;
 
     // Save updated product
     const updatedProduct = await product.save();

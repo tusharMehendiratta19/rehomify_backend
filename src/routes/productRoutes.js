@@ -14,7 +14,9 @@ router.get('/search', productController.getProductBySearch);
 router.get('/:id', productController.getProductById);
 router.get('/edit/:id', productController.editProductById);
 router.get('/delete/:id', productController.deleteProductById);
-router.post('/updatedProduct/:id', productController.updatedProductById);
+router.post('/updatedProduct/:id', upload.fields([
+    { name: 'optionalImages', maxCount: 4 }
+]), productController.updatedProductById);
 
 // POST endpoint for product with 1 main image + up to 4 optional images
 router.post(
