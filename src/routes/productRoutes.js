@@ -27,5 +27,13 @@ router.post(
     ]),
     productController.addProduct
 );
+router.post(
+    '/addCustomerProduct',
+    upload.fields([
+        { name: 'mainImage', maxCount: 1 },
+        { name: 'optionalImages', maxCount: 4 }
+    ]),
+    productController.addCustomerProduct
+);
 
 module.exports = router;

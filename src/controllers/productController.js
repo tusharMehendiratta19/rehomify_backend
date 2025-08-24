@@ -1,6 +1,7 @@
 const AWS = require('aws-sdk');
 const { v4: uuidv4 } = require('uuid');
 const Product = require('../models/Product');
+const CustomerProduct = require('../models/CustomerProduct');
 const e = require('express');
 
 const s3 = new AWS.S3({
@@ -119,7 +120,102 @@ exports.addProduct = async (req, res) => {
 };
 
 
+exports.addCustomerProduct = async (req, res) => {
+  try {
+    const {
+      sellerId,
+      name,
+      description,
+      category,
+      color,
+      isRefurbished,
+      width,
+      length,
+      price,
+      height,
+      woodMaterial,
+      suggestion
+    } = req.body;
 
+    console.log('Request Body:', req.body);
+    console.log('Request Files:', req.files);
+
+    const files = req.files || {};
+    const mainImageFile = files.mainImage?.[0];
+    const optionalImageFiles = files.optionalImages || [];
+
+    const isNewProduct = isRefurbished === 'false';
+
+    // Validation
+    if (
+      !sellerId || !name || !description || !category || !color ||
+      !isRefurbished || !width || !length || !height || !woodMaterial || !mainImageFile
+    ) {
+      return res.status(400).json({ message: 'All fields including main image and varieties are required' });
+    }
+
+    if(suggestion=="false" && !price){
+      return res.status(400).json({ message: 'Please enter the price' });
+    }
+
+    // Upload main image
+    const mainImageKey = `products/${uuidv4()}_${mainImageFile.originalname}`;
+    const mainUploadResult = await s3.upload({
+      Bucket: process.env.AWS_BUCKET_NAME,
+      Key: mainImageKey,
+      Body: mainImageFile.buffer,
+      ContentType: mainImageFile.mimetype,
+      ACL: 'public-read',
+    }).promise();
+
+    const mainImageUrl = mainUploadResult.Location;
+
+    // Upload optional images
+
+    const optionalImageUrls = [];
+    for (let i = 0; i < optionalImageFiles.length; i++) {
+      const file = optionalImageFiles[i];
+      const key = `products/optional/${uuidv4()}_${file.originalname}`;
+      const uploadResult = await s3.upload({
+        Bucket: process.env.AWS_BUCKET_NAME,
+        Key: key,
+        Body: file.buffer,
+        ContentType: file.mimetype,
+        ACL: 'public-read',
+      }).promise();
+      optionalImageUrls.push(uploadResult.Location);
+    }
+
+    // Save product with varieties
+    const newProduct = new CustomerProduct({
+      name,
+      description,
+      category,
+      color,
+      price: price, // default price from first variety
+      image: mainImageUrl,
+      optionalImages: optionalImageUrls,
+      sellerId,
+      isRefurbished: isRefurbished === 'true',
+      isNewProduct,
+      width: parseFloat(width),
+      height: parseFloat(height),
+      length: parseFloat(length),
+      woodMaterial
+    });
+
+    const savedProduct = await newProduct.save();
+
+    return res.status(201).json({
+      status: true,
+      message: 'Customer Product added successfully',
+      data: savedProduct
+    });
+  } catch (err) {
+    console.error('Error in addProduct:', err);
+    return res.status(500).json({ error: err.message });
+  }
+};
 
 // GET all products categorized
 exports.getAllcatProducts = async (req, res) => {
