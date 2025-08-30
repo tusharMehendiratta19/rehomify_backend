@@ -114,8 +114,7 @@ exports.signup = async (req, res) => {
         return res.status(200).json({
           status: true,
           message: `${type} registered successfully`,
-          data: addedData,
-          token
+          data: addedData
         });
       }
 
