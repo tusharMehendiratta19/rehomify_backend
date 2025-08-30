@@ -93,6 +93,9 @@ const customerSchema = new mongoose.Schema(
         ref: 'ResellOrder',
       }
     ],
+    otp: {
+      type: Number,
+    }
   },
   {
     timestamps: true,

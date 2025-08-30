@@ -2,8 +2,96 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const Customer = require('../models/Customer');
 const Seller = require('../models/Seller');
+const axios = require("axios");
 
-const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret';
+function generateOtp() {
+  const max = 9999;
+  const min = 1000;
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+exports.sendOtp = async (req, resp) => {
+  const otp = generateOtp();
+  console.log("Generated OTP:", otp, typeof otp);
+
+  try {
+    const result = await axios.post(
+      "https://www.fast2sms.com/dev/bulkV2",
+      {
+        route: "otp",
+        variables_values: otp,
+        numbers: req.body.mobileNo, // must be string
+        flash: 0
+      },
+      {
+        headers: {
+          authorization:
+            "YTyhJxpGjDlo3urIZti1mc7k6N8fFUq5QwBHg9bVRsO240KEAvex1m6CdhqjZap4M37FXfiLIUnDNk2c",
+          "Content-Type": "application/json"
+        }
+      }
+    );
+
+    console.log("Fast2SMS Response:", result.data);
+
+    if (result.data.return) {
+      let updateResult = await Customer.updateOne(
+        { mobileNo: req.body.mobileNo },
+        { $set: { otp: otp } },
+        { upsert: true }
+      );
+
+      if (updateResult) {
+        resp.send({
+          status: true,
+          message: "OTP sent successfully. Please check your SMS",
+        });
+      }
+
+    } else {
+      resp.send({
+        status: false,
+        message: result.data.message || "Could not send OTP"
+      });
+    }
+  } catch (err) {
+    console.error("Error sending OTP:", err.message);
+    resp.status(500).send({
+      status: false,
+      message: "Server error while sending OTP"
+    });
+  }
+};
+
+
+exports.verifyOtp = async (req, res) => {
+  try {
+    const { mobileNo, otp } = req.body;
+    console.log("request body: ", req.body)
+    if (!mobileNo || !otp) {
+      return res.status(400).json({ status: false, message: 'Mobile number and OTP are required.' });
+    }
+
+    const customer = await Customer.findOne({ mobileNo });
+    console.log("customer: ", customer)
+    if (!customer) {
+      return res.status(404).json({ status: false, message: 'Customer not found.' });
+    }
+
+    if (customer.otp && customer.otp.toString() === otp.toString()) {
+      // console.log("customer: ", customer)
+      const token = jwt.sign({ id: customer._id, role: customer.type }, JWT_SECRET, { expiresIn: '7d' });
+      // Optionally clear OTP after verification
+      // customer.otp = undefined;
+      // await customer.save();
+      return res.status(200).json({ status: true, message: 'OTP verified successfully.', data: customer, token });
+    } else {
+      return res.status(400).json({ status: false, message: 'Invalid OTP.' });
+    }
+  } catch (err) {
+    return res.status(500).json({ status: false, error: err.message });
+  }
+};
 
 exports.signup = async (req, res) => {
   try {
@@ -18,7 +106,7 @@ exports.signup = async (req, res) => {
       const customer = new Customer({ name, mobileNo, email, type, password: hashedPassword });
       let addedData = await customer.save();
       if (addedData) {
-        const token = jwt.sign({ id: addedData._id, role: data.type }, JWT_SECRET, { expiresIn: '7d' });
+
         addedData = addedData.toObject();
         delete addedData.password;
         delete addedData.__v;
@@ -58,6 +146,11 @@ exports.signup = async (req, res) => {
     return res.status(500).json({ error: err.message });
   }
 };
+
+
+const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret';
+
+
 
 exports.login = async (req, res) => {
   try {
@@ -229,3 +322,4 @@ exports.saveOrder = async (req, res) => {
     return res.status(500).json({ error: err.message });
   }
 };
+

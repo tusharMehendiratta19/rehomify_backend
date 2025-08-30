@@ -12,5 +12,7 @@ router.get('/getCustomerDetails/:id', authController.getCustomerDetails);
 router.post('/saveCustomerDetails', authController.saveCustomerDetails);
 router.post('/saveCustomerAddress', authController.saveCustomerAddress);
 router.post('/saveOrder', authController.saveOrder);
+router.post('/sendOtp', authController.sendOtp);
+router.post('/verifyOtp', authController.verifyOtp);
 
 module.exports = router;
