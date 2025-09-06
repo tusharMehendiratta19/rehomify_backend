@@ -17,6 +17,7 @@ exports.addProduct = async (req, res) => {
       description,
       category,
       color,
+      colorCode,
       isRefurbished,
       width,
       length,
@@ -52,7 +53,7 @@ exports.addProduct = async (req, res) => {
     // Validation
     if (
       !sellerId || !name || !description || !category || !color ||
-      !isRefurbished || !width || !length || !height || !woodMaterial || !mainImageFile ||
+      !isRefurbished || !width || !length || !height || !woodMaterial || !mainImageFile || colorCode ||
       parsedVarieties.length === 0
     ) {
       return res.status(400).json({ message: 'All fields including main image and varieties are required' });
@@ -102,7 +103,8 @@ exports.addProduct = async (req, res) => {
       height: parseFloat(height),
       length: parseFloat(length),
       woodMaterial,
-      varieties: parsedVarieties
+      varieties: parsedVarieties,
+      colorCode
     });
 
     const savedProduct = await newProduct.save();
@@ -124,16 +126,11 @@ exports.addCustomerProduct = async (req, res) => {
     const {
       sellerId,
       name,
-      description,
       category,
       color,
-      isRefurbished,
-      width,
-      length,
-      price,
-      height,
-      woodMaterial,
-      suggestion
+      colorCode,
+      suggestion,
+      price // optional, depends on frontend
     } = req.body;
 
     console.log('Request Body:', req.body);
@@ -143,21 +140,18 @@ exports.addCustomerProduct = async (req, res) => {
     const mainImageFile = files.mainImage?.[0];
     const optionalImageFiles = files.optionalImages || [];
 
-    const isNewProduct = isRefurbished === 'false';
-
-    // Validation
-    if (
-      !sellerId || !name || !description || !category || !color ||
-      !isRefurbished || !width || !length || !height || !woodMaterial || !mainImageFile
-    ) {
-      return res.status(400).json({ message: 'All fields including main image and varieties are required' });
+    // ✅ Validation
+    if (!sellerId || !name || !category || !color || !colorCode || !mainImageFile) {
+      return res.status(400).json({
+        message: 'sellerId, name, category, color, colorCode, and mainImage are required'
+      });
     }
 
-    if (suggestion == "false" && !price) {
+    if (suggestion === "false" && !price) {
       return res.status(400).json({ message: 'Please enter the price' });
     }
 
-    // Upload main image
+    // ✅ Upload main image
     const mainImageKey = `products/${uuidv4()}_${mainImageFile.originalname}`;
     const mainUploadResult = await s3.upload({
       Bucket: process.env.AWS_BUCKET_NAME,
@@ -169,8 +163,7 @@ exports.addCustomerProduct = async (req, res) => {
 
     const mainImageUrl = mainUploadResult.Location;
 
-    // Upload optional images
-
+    // ✅ Upload optional images
     const optionalImageUrls = [];
     for (let i = 0; i < optionalImageFiles.length; i++) {
       const file = optionalImageFiles[i];
@@ -185,22 +178,17 @@ exports.addCustomerProduct = async (req, res) => {
       optionalImageUrls.push(uploadResult.Location);
     }
 
-    // Save product with varieties
+    // ✅ Save product
     const newProduct = new CustomerProduct({
+      sellerId,
       name,
-      description,
       category,
       color,
-      price: price, // default price from first variety
+      colorCode,
+      suggestion: suggestion === "true",
+      price: price || null,
       image: mainImageUrl,
       optionalImages: optionalImageUrls,
-      sellerId,
-      isRefurbished: isRefurbished === 'true',
-      isNewProduct,
-      width: parseFloat(width),
-      height: parseFloat(height),
-      length: parseFloat(length),
-      woodMaterial
     });
 
     const savedProduct = await newProduct.save();
@@ -210,11 +198,13 @@ exports.addCustomerProduct = async (req, res) => {
       message: 'Customer Product added successfully',
       data: savedProduct
     });
+
   } catch (err) {
-    console.error('Error in addProduct:', err);
+    console.error('Error in addCustomerProduct:', err);
     return res.status(500).json({ error: err.message });
   }
 };
+
 
 // GET all products categorized
 exports.getAllcatProducts = async (req, res) => {

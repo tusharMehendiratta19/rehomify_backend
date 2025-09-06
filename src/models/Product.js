@@ -16,6 +16,7 @@ const productSchema = new mongoose.Schema({
   length: Number,
   color: String,
   woodMaterial: String,
+  colorCode: String,
   varieties: [
     {
       name: { type: String, required: true },

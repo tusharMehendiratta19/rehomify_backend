@@ -11,11 +11,12 @@ const CustomerproductSchema = new mongoose.Schema({
   sellerId: String,
   isNewProduct: Boolean,
   isRefurbished: Boolean,
-  suggestion:Boolean,
+  suggestion: Boolean,
   width: Number,
   height: Number,
   length: Number,
   color: String,
+  colorCode: String,
   woodMaterial: String,
 }, { timestamps: true });
 
