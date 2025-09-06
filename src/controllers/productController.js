@@ -2,7 +2,6 @@ const AWS = require('aws-sdk');
 const { v4: uuidv4 } = require('uuid');
 const Product = require('../models/Product');
 const CustomerProduct = require('../models/CustomerProduct');
-const e = require('express');
 
 const s3 = new AWS.S3({
   accessKeyId: process.env.AWS_ACCESS_KEY,
@@ -154,7 +153,7 @@ exports.addCustomerProduct = async (req, res) => {
       return res.status(400).json({ message: 'All fields including main image and varieties are required' });
     }
 
-    if(suggestion=="false" && !price){
+    if (suggestion == "false" && !price) {
       return res.status(400).json({ message: 'Please enter the price' });
     }
 
@@ -485,3 +484,29 @@ exports.updatedProductById = async (req, res) => {
     return res.status(500).json({ error: err.message });
   }
 };
+
+const pincodes = Array.from({ length: 614 }, (_, i) => 400001 + i);
+
+exports.pincodeCheck = async (req, resp) => {
+  try {
+    const { pincode } = req.body;
+
+    if (!pincode) {
+      return resp.status(400).json({ success: false, message: "Pincode is required" });
+    }
+
+    const exists = pincodes.includes(Number(pincode));
+
+    if (exists) {
+      return resp.json({ success: true, message: "Pincode is serviceable" });
+    } else {
+      return resp.json({ success: false, message: "Pincode is not serviceable" });
+    }
+  } catch (err) {
+    console.log("pincode error: ", err || err.message)
+    resp.json({
+      status: false,
+      result: err || err.message
+    })
+  }
+}

@@ -36,4 +36,6 @@ router.post(
     productController.addCustomerProduct
 );
 
+router.post("/pincodeCheck", productController.pincodeCheck)
+
 module.exports = router;

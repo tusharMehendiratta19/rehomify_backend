@@ -3,6 +3,8 @@ const jwt = require('jsonwebtoken');
 const Customer = require('../models/Customer');
 const Seller = require('../models/Seller');
 const axios = require("axios");
+const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret';
+
 
 function generateOtp() {
   const max = 9999;
@@ -80,7 +82,7 @@ exports.verifyOtp = async (req, res) => {
 
     if (customer.otp && customer.otp.toString() === otp.toString()) {
       // console.log("customer: ", customer)
-      const token = jwt.sign({ id: customer._id, role: customer.type }, JWT_SECRET, { expiresIn: '7d' });
+      const token = jwt.sign({ id: customer._id, role: customer.type }, JWT_SECRET);
       // Optionally clear OTP after verification
       // customer.otp = undefined;
       // await customer.save();
@@ -126,7 +128,7 @@ exports.signup = async (req, res) => {
 
       let addedData = await seller.save();
       if (addedData) {
-        const token = jwt.sign({ id: addedData._id, role: data.type }, JWT_SECRET, { expiresIn: '7d' });
+        const token = jwt.sign({ id: addedData._id, role: data.type }, JWT_SECRET);
         addedData = addedData.toObject();
         delete addedData.password; // Remove password from response
         delete addedData.__v; // Remove version key from response
@@ -145,10 +147,6 @@ exports.signup = async (req, res) => {
     return res.status(500).json({ error: err.message });
   }
 };
-
-
-const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret';
-
 
 
 exports.login = async (req, res) => {
@@ -171,7 +169,7 @@ exports.login = async (req, res) => {
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) return res.status(400).json({ message: 'Invalid credentials' });
 
-    const token = jwt.sign({ id: user._id, role: userType }, JWT_SECRET, { expiresIn: '1d' });
+    const token = jwt.sign({ id: user._id, role: userType }, JWT_SECRET);
     return res.status(200).json({ token, role: userType, user, status: true });
   } catch (err) {
     return res.status(500).json({ error: err.message });
@@ -204,7 +202,7 @@ exports.changePassword = async (req, res) => {
     user.password = hashedPassword;
     await user.save();
 
-    const token = jwt.sign({ id: user._id, role: userType }, JWT_SECRET, { expiresIn: '7d' });
+    const token = jwt.sign({ id: user._id, role: userType }, JWT_SECRET);
 
     return res.status(200).json({
       message: 'Password updated successfully',
