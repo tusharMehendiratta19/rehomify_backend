@@ -1,23 +1,23 @@
 const mongoose = require('mongoose');
 
-const CustomerproductSchema = new mongoose.Schema({
-  seller: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-  category: String,
-  name: String,
-  description: String,
-  price: Number,
-  image: String,
-  optionalImages: [String],
-  sellerId: String,
-  isNewProduct: Boolean,
-  isRefurbished: Boolean,
-  suggestion: Boolean,
-  width: Number,
-  height: Number,
-  length: Number,
-  color: String,
-  colorCode: String,
-  woodMaterial: String,
-}, { timestamps: true });
+const CustomerproductSchema = new mongoose.Schema(
+  {
+    firstName: String,
+    lastName: String,
+    emailid: String,
+    mobileNo: String,
+    productName: String,
+    category: String,
+    description: String,
+    addressline1: String,
+    addressline2: String,
+    pincode: String,
+    landmark: String,
+    price: Number,
+    image: String,
+    cpImagesUrls: [String],
+  },
+  { timestamps: true }
+);
 
 module.exports = mongoose.model('CustomerProduct', CustomerproductSchema);

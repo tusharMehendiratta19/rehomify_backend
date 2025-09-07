@@ -17,6 +17,17 @@ exports.sendOtp = async (req, resp) => {
   console.log("Generated OTP:", otp, typeof otp);
 
   try {
+    // ✅ Check if customer exists
+    const customer = await Customer.findOne({ mobileNo: req.body.mobileNo });
+
+    if (!customer) {
+      return resp.status(404).send({
+        status: false,
+        message: "Mobile number does not exist, please sign up"
+      });
+    }
+
+    // ✅ Send OTP through Fast2SMS
     const result = await axios.post(
       "https://www.fast2sms.com/dev/bulkV2",
       {
@@ -27,8 +38,7 @@ exports.sendOtp = async (req, resp) => {
       },
       {
         headers: {
-          authorization:
-            "YTyhJxpGjDlo3urIZti1mc7k6N8fFUq5QwBHg9bVRsO240KEAvex1m6CdhqjZap4M37FXfiLIUnDNk2c",
+          authorization: "YTyhJxpGjDlo3urIZti1mc7k6N8fFUq5QwBHg9bVRsO240KEAvex1m6CdhqjZap4M37FXfiLIUnDNk2c",
           "Content-Type": "application/json"
         }
       }
@@ -37,33 +47,32 @@ exports.sendOtp = async (req, resp) => {
     console.log("Fast2SMS Response:", result.data);
 
     if (result.data.return) {
-      let updateResult = await Customer.updateOne(
+      // ✅ Update OTP in existing customer
+      await Customer.updateOne(
         { mobileNo: req.body.mobileNo },
-        { $set: { otp: otp } },
-        { upsert: true }
+        { $set: { otp: otp } }
       );
 
-      if (updateResult) {
-        resp.send({
-          status: true,
-          message: "OTP sent successfully. Please check your SMS",
-        });
-      }
-
+      return resp.send({
+        status: true,
+        message: "OTP sent successfully. Please check your SMS",
+      });
     } else {
-      resp.send({
+      return resp.send({
         status: false,
         message: result.data.message || "Could not send OTP"
       });
     }
+
   } catch (err) {
     console.error("Error sending OTP:", err.message);
-    resp.status(500).send({
+    return resp.status(500).send({
       status: false,
       message: "Server error while sending OTP"
     });
   }
 };
+
 
 
 exports.verifyOtp = async (req, res) => {
@@ -258,9 +267,23 @@ exports.saveCustomerDetails = async (req, res) => {
   }
 };
 
+const validPincodeRanges = [
+  { start: 400001, end: 400104 },
+  { start: 400601, end: 400614 }
+];
+
 exports.saveCustomerAddress = async (req, res) => {
   try {
     const { custId, name, addressLine1, addressLine2, landmark, pinCode, city, state } = req.body;
+
+    const pin = Number(pinCode);
+
+    // ✅ Check if pin lies in any valid range
+    const exists = validPincodeRanges.some(range => pin >= range.start && pin <= range.end);
+
+    if (!exists) {
+      return res.json({ status: false, message: "Pincode is not serviceable" });
+    }
 
     if (!custId) {
       return res.status(400).json({ message: 'Customer ID is required' });

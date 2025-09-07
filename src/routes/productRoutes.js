@@ -35,6 +35,13 @@ router.post(
     ]),
     productController.addCustomerProduct
 );
+router.post(
+    '/addResellProduct',
+    upload.fields([
+        { name: 'cpImages', maxCount: 4 }
+    ]),
+    productController.addResellProduct
+);
 
 router.post("/pincodeCheck", productController.pincodeCheck)
 

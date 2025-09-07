@@ -2,6 +2,7 @@ const AWS = require('aws-sdk');
 const { v4: uuidv4 } = require('uuid');
 const Product = require('../models/Product');
 const CustomerProduct = require('../models/CustomerProduct');
+// const Resell = require("../models/Resell");
 
 const s3 = new AWS.S3({
   accessKeyId: process.env.AWS_ACCESS_KEY,
@@ -475,7 +476,11 @@ exports.updatedProductById = async (req, res) => {
   }
 };
 
-const pincodes = Array.from({ length: 614 }, (_, i) => 400001 + i);
+// ✅ Define valid ranges
+const validPincodeRanges = [
+  { start: 400001, end: 400104 },
+  { start: 400601, end: 400614 }
+];
 
 exports.pincodeCheck = async (req, resp) => {
   try {
@@ -485,7 +490,10 @@ exports.pincodeCheck = async (req, resp) => {
       return resp.status(400).json({ success: false, message: "Pincode is required" });
     }
 
-    const exists = pincodes.includes(Number(pincode));
+    const pin = Number(pincode);
+
+    // ✅ Check if pin lies in any valid range
+    const exists = validPincodeRanges.some(range => pin >= range.start && pin <= range.end);
 
     if (exists) {
       return resp.json({ success: true, message: "Pincode is serviceable" });
@@ -493,10 +501,94 @@ exports.pincodeCheck = async (req, resp) => {
       return resp.json({ success: false, message: "Pincode is not serviceable" });
     }
   } catch (err) {
-    console.log("pincode error: ", err || err.message)
-    resp.json({
-      status: false,
-      result: err || err.message
-    })
+    console.error("pincode error:", err?.message || err);
+    resp.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+      error: err?.message || err
+    });
   }
-}
+};
+
+
+exports.addResellProduct = async (req, res) => {
+  try {
+    const { firstName, lastName, emailid, mobileNo, productName, category, description, addressline1, addressline2, pincode, landmark, price,
+    } = req.body;
+
+    console.log("Request Body:", req.body);
+    console.log("Request Files:", req.files);
+
+    const files = req.files || {};
+    const cpImages = files.cpImages || [];
+
+    // ✅ Validation
+    if (!firstName || !lastName || !emailid || !mobileNo || !productName || !category || !pincode || cpImages.length===0 || !description || !addressline1 || !addressline2 || !price || !landmark
+    ) {
+      return res.status(200).json({
+        message:
+          "firstName, lastName, emailid, mobileNo, productName, category, description, addressline1, addressline2, pincode, landmark, price and images are required",
+      });
+    }
+
+    // ✅ Upload main image
+    // const mainImageKey = `resell/${uuidv4()}_${mainImageFile.originalname}`;
+    // const mainUploadResult = await s3
+    //   .upload({
+    //     Bucket: process.env.AWS_BUCKET_NAME,
+    //     Key: mainImageKey,
+    //     Body: mainImageFile.buffer,
+    //     ContentType: mainImageFile.mimetype,
+    //     ACL: "public-read",
+    //   })
+    //   .promise();
+
+    // const mainImageUrl = mainUploadResult.Location;
+
+    // ✅ Upload optional images
+    const cpImagesUrls = [];
+    for (let i = 0; i < cpImages.length; i++) {
+      const file = cpImages[i];
+      const key = `resell/${uuidv4()}_${file.originalname}`;
+      const uploadResult = await s3
+        .upload({
+          Bucket: process.env.AWS_BUCKET_NAME,
+          Key: key,
+          Body: file.buffer,
+          ContentType: file.mimetype,
+          ACL: "public-read",
+        })
+        .promise();
+      cpImagesUrls.push(uploadResult.Location);
+    }
+
+    // ✅ Save product in DB
+    const newResell = new CustomerProduct({
+      firstName,
+      lastName,
+      emailid,
+      mobileNo,
+      productName,
+      category,
+      description,
+      addressline1,
+      addressline2,
+      pincode,
+      landmark,
+      price,
+      cpImagesUrls
+    });
+
+    const savedResell = await newResell.save();
+
+    return res.status(201).json({
+      status: true,
+      message: "Resell Product added successfully",
+      data: savedResell,
+    });
+  } catch (err) {
+    console.error("Error in addResellProduct:", err);
+    return res.status(500).json({ error: err.message });
+  }
+};
+
