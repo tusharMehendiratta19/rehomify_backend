@@ -281,10 +281,6 @@ exports.saveCustomerAddress = async (req, res) => {
     // ✅ Check if pin lies in any valid range
     const exists = validPincodeRanges.some(range => pin >= range.start && pin <= range.end);
 
-    if (!exists) {
-      return res.json({ status: false, message: "Pincode is not serviceable" });
-    }
-
     if (!custId) {
       return res.status(400).json({ message: 'Customer ID is required' });
     }
@@ -301,6 +297,9 @@ exports.saveCustomerAddress = async (req, res) => {
     customer.address.city = city || customer.city;
     customer.address.state = state || customer.state;
     const updatedCustomer = await customer.save();
+    if (!exists) {
+      return res.json({ status: false, message: "Pincode is not serviceable" });
+    }
     return res.status(200).json({ status: true, message: 'Customer address updated successfully', data: updatedCustomer });
   } catch (err) {
     return res.status(500).json({ error: err.message });
