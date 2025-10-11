@@ -95,7 +95,8 @@ const customerSchema = new mongoose.Schema(
     ],
     otp: {
       type: Number,
-    }
+    },
+    paymentDetails: { type: Object, default: {} }
   },
   {
     timestamps: true,
