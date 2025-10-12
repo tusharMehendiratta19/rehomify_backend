@@ -4,7 +4,7 @@ const { BASE_URL, ACCOUNT_ID, AUTH_TOKEN } = require("../config/zohoConfig");
 const headers = {
   "Content-Type": "application/json",
   "Accept": "application/json",
-  "Authorization": AUTH_TOKEN
+  "Authorization": `Bearer ${AUTH_TOKEN}`
 };
 
 // 🟢 Create Payment Session
