@@ -66,8 +66,8 @@ router.get("/payment-link/:id", async (req, res) => {
 
 router.post("/zoho-webhook", express.json(), async (req, res) => {
   try {
-    const event = req.body.event;
-    const data = req.body.data;
+    const event = req.body.event_type;
+    const data = req.body.event_object.payment;
     console.log("webhood request body: ", req.body)
     let custId = data.reference_number.split("-")
     custId = custId[1]
