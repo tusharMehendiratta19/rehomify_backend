@@ -13,7 +13,9 @@ const orderSchema = new mongoose.Schema({
     type: String,
     enum: ['placed', 'shipped', 'delivered', 'cancelled', "out for delivery"],
     default: 'placed'
-  }
+  },
+  paymentDetails: { type: Object },
+  paymentStatus: { type: String }
 }, { timestamps: true });
 
 module.exports = mongoose.model('Order', orderSchema);

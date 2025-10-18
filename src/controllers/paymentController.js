@@ -61,28 +61,95 @@ exports.createPaymentSession = async (data) => {
 
 // 🟡 Retrieve Payment Session
 exports.getPaymentSession = async (sessionId) => {
-  let url = `${BASE_URL}/paymentsessions/${sessionId}?account_id=${ACCOUNT_ID}`;
-  let res = await axios.get(url, { headers });
-  return res.data;
+  try {
+    let url = `${BASE_URL}/paymentsessions/${sessionId}?account_id=${ACCOUNT_ID}`;
+    let res = await axios.get(url, { headers: buildHeaders() });
+    return res.data;
+  } catch (err) {
+    if (err.response && err.response.status === 401) {
+      console.log("⚠️ Access token expired — refreshing...");
+      await getAccessToken(); // refresh token
+      const res = await axios.get(`${BASE_URL}/paymentsessions/${sessionId}?account_id=${ACCOUNT_ID}`, { headers: buildHeaders() });
+      return res.data;
+    } else {
+      console.error("❌ Error creating payment session:", err.response?.data || err.message);
+      throw err;
+    }
+  }
 };
 
 // 💳 Retrieve Payment Details
 exports.getPaymentDetails = async (paymentId) => {
-  let url = `${BASE_URL}/payments/${paymentId}?account_id=${ACCOUNT_ID}`;
-  let res = await axios.get(url, { headers });
-  return res.data;
+  try {
+    let url = `${BASE_URL}/payments/${paymentId}?account_id=${ACCOUNT_ID}`;
+    let res = await axios.get(url, { headers: buildHeaders() });
+    return res.data;
+  } catch (err) {
+    if (err.response && err.response.status === 401) {
+      console.log("⚠️ Access token expired — refreshing...");
+      await getAccessToken(); // refresh token
+      const res = await axios.get(`${BASE_URL}/payments/${paymentId}?account_id=${ACCOUNT_ID}`, { headers: buildHeaders() });
+      return res.data;
+    } else {
+      console.error("❌ Error creating payment session:", err.response?.data || err.message);
+      throw err;
+    }
+  }
 };
+
+// get all the payments list
+exports.getPaymentsList = async () => {
+  try {
+    let url = `${BASE_URL}/payments?account_id=${ACCOUNT_ID}`;
+    let res = await axios.get(url, { headers: buildHeaders() })
+    return res.data
+  } catch (err) {
+    if (err.response && err.response.status === 401) {
+      console.log("⚠️ Access token expired — refreshing...");
+      await getAccessToken(); // refresh token
+      const res = await axios.get(`${BASE_URL}/payments?account_id=${ACCOUNT_ID}`, { headers: buildHeaders() });
+      return res.data;
+    } else {
+      console.error("❌ Error creating payment session:", err.response?.data || err.message);
+      throw err;
+    }
+  }
+}
 
 // 🔗 Create Payment Link
 exports.createPaymentLink = async (data) => {
-  let url = `${BASE_URL}/paymentlinks?account_id=${ACCOUNT_ID}`;
-  let res = await axios.post(url, data, { headers });
-  return res.data;
+  try {
+    let url = `${BASE_URL}/paymentlinks?account_id=${ACCOUNT_ID}`;
+    let res = await axios.post(url, data, { headers: buildHeaders() });
+    return res.data;
+  } catch (err) {
+    if (err.response && err.response.status === 401) {
+      console.log("⚠️ Access token expired — refreshing...");
+      await getAccessToken(); // refresh token
+      const res = await axios.post(`${BASE_URL}/paymentlinks?account_id=${ACCOUNT_ID}`, data, { headers: buildHeaders() });
+      return res.data;
+    } else {
+      console.error("❌ Error creating payment session:", err.response?.data || err.message);
+      throw err;
+    }
+  }
 };
 
 // 🔗 Retrieve Payment Link
 exports.getPaymentLink = async (linkId) => {
-  let url = `${BASE_URL}/paymentlinks/${linkId}?account_id=${ACCOUNT_ID}`;
-  let res = await axios.get(url, { headers });
-  return res.data;
+  try {
+    let url = `${BASE_URL}/paymentlinks/${linkId}?account_id=${ACCOUNT_ID}`;
+    let res = await axios.get(url, { headers: buildHeaders() });
+    return res.data;
+  } catch (err) {
+    if (err.response && err.response.status === 401) {
+      console.log("⚠️ Access token expired — refreshing...");
+      await getAccessToken(); // refresh token
+      const res = await axios.get(`${BASE_URL}/paymentlinks/${linkId}?account_id=${ACCOUNT_ID}`, { headers: buildHeaders() });
+      return res.data;
+    } else {
+      console.error("❌ Error creating payment session:", err.response?.data || err.message);
+      throw err;
+    }
+  }
 };
