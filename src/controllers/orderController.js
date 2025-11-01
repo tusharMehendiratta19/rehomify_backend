@@ -14,12 +14,14 @@ exports.getOrders = async (req, res) => {
 
     // Step 1: Find orders for the customer and get all productIds
     const orders = await Order.find({ customerId }).select("productId quantity createdAt deliveryDate status");
+    console.log("orders: ", orders);
 
     if (!orders.length) {
       return res.status(404).json({ message: "No orders found for this customer" });
     }
 
     const productIds = orders.map(order => order.productId);
+    console.log("productIds: ", productIds);
 
     // Step 2: Fetch all matching products
     const products = await Product.find({ _id: { $in: productIds } }).select("category name description price image");
