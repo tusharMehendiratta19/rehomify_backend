@@ -1,13 +1,11 @@
 const mongoose = require('mongoose');
 
 const reviewSchema = new mongoose.Schema({
-  customerName: String,
-  imageUrl: String,
-  productId: { type: mongoose.Schema.Types.ObjectId, ref: 'Product' },
-  orderId: { type: mongoose.Schema.Types.ObjectId, ref: 'Product' },
+  custId: String,
+  orderId: String,
   rating: Number,
   comment: String,
   date: { type: Date, default: Date.now }
-});
+}, { timestamps: true });
 
 module.exports = mongoose.model('Review', reviewSchema);

@@ -13,6 +13,7 @@ router.use('/cart', require('./routes/cartRoutes'));
 router.use('/wishlist', require('./routes/wishlistRoutes'));
 router.use('/home', require('./routes/homeRoutes'));
 router.use('/payments', require('./routes/paymentRoutes'));
+router.use('/reviews', require('./routes/reviewRoutes'))
 
 // 404 handler for unknown API routes
 router.use('*', (req, res) => {

@@ -52,3 +52,59 @@ exports.getAllOffers = async (req, res) => {
     return res.status(500).json({ success: false, error: err.message });
   }
 };
+
+exports.createOffer = async (req, res) => {
+  try {
+    const { type, id, description, code, amount, percentage } = req.body;
+    const newOffer = new Offer({
+      type,
+      description,
+      id,
+      code,
+      amount,
+      percentage,
+      isActive: true,
+    });
+    await newOffer.save();
+    return res.status(201).json({ success: true, data: newOffer });
+  } catch (err) {
+    console.error("Error creating offer:", err);
+    return res.status(500).json({ success: false, error: err.message });
+  }
+};
+
+exports.editOffer = async (req, res) => {
+  try {
+    const { id, type, description, code, amount, percentage } = req.body;
+    const updatedOffer = await Offer.findByIdAndUpdate(
+      id,
+      { type, description, code, amount, percentage },
+      { new: true }
+    );
+    if (!updatedOffer) {
+      return res.status(404).json({ success: false, error: "Offer not found" });
+    }
+    return res.status(200).json({ success: true, data: updatedOffer });
+  } catch (err) {
+    console.error("Error editing offer:", err);
+    return res.status(500).json({ success: false, error: err.message });
+  }
+};
+
+exports.disableOffer = async (req, res) => {
+  try {
+    const { id } = req.body;
+    const disabledOffer = await Offer.findByIdAndUpdate(
+      id,
+      { isActive: false },
+      { new: true }
+    );
+    if (!disabledOffer) {
+      return res.status(404).json({ success: false, error: "Offer not found" });
+    }
+    return res.status(200).json({ success: true, data: disabledOffer });
+  } catch (err) {
+    console.error("Error disabling offer:", err);
+    return res.status(500).json({ success: false, error: err.message });
+  }
+};
