@@ -1,12 +1,22 @@
 const Customer = require('../models/Customer');
 const Order = require('../models/Order');
 const Product = require('../models/Product');
+const Review = require('../models/Review');
 const mongoose = require("mongoose");
 const puppeteer = require('puppeteer');
 const invoiceTemplate = require('../invoice/invoiceTemplate');
 const { uploadToS3 } = require('../utils/s3');
 const { sendEmail } = require('../utils/email');
+const { S3Client, PutObjectCommand, GetObjectCommand } = require("@aws-sdk/client-s3");
 const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
+
+const s3 = new S3Client({
+  region: process.env.AWS_REGION,
+  credentials: {
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+  }
+});
 
 exports.getAllOrders = async (req, res) => {
   try {

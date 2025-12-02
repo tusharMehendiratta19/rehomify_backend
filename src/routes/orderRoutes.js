@@ -7,7 +7,7 @@ const authenticate = require('../middlewares/authenticate');
 router.get('/', orderController.getAllOrders);
 router.get('/:custId', orderController.getOrders);
 router.post('/addOrder', orderController.addOrder);
-router.get("/getInvoice/:id", orderController.getInvoice)
+router.get("/getInvoice/:orderId", orderController.getInvoice)
 router.post("/generateInvoice", orderController.generateInvoice)
 
 module.exports = router;

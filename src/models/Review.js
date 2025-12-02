@@ -4,7 +4,7 @@ const reviewSchema = new mongoose.Schema({
   custId: String,
   orderId: String,
   rating: Number,
-  comment: String,
+  review: String,
   date: { type: Date, default: Date.now }
 }, { timestamps: true });
 
