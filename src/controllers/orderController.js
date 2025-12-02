@@ -6,6 +6,7 @@ const puppeteer = require('puppeteer');
 const invoiceTemplate = require('../invoice/invoiceTemplate');
 const { uploadToS3 } = require('../utils/s3');
 const { sendEmail } = require('../utils/email');
+const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
 
 exports.getAllOrders = async (req, res) => {
   try {
@@ -165,22 +166,29 @@ exports.addOrder = async (req, res) => {
 
 exports.generateInvoice = async (req, res) => {
   try {
-    const { orderId } = req.params;
+    const { orderId } = req.body;
 
     if (!orderId) {
       return res.status(400).json({ message: "orderId is required" });
     }
 
     const order = await Order.findById(orderId)
-      .select("quantity createdAt productId color customerId deliveryAddress")
+      .select("quantity createdAt productId customerId deliveryAddress")
       .populate({
         path: "productId",
         select: "name price color image"
       })
       .populate({
         path: "customerId",
-        select: "name email mobile address"
+        select: "name email mobileNo address"
       });
+
+
+    const customerAddress = `${order.customerId?.address?.addressLine1 || ""} ${order.customerId?.address?.addressLine2 || ""
+      } ${order.customerId?.address?.city || ""} ${order.customerId?.address?.state || ""
+      }-${order.customerId?.address?.pinCode || ""}`;
+
+    console.log("POPULATED CUSTOMER:", order.customerId);
 
     if (!order) {
       return res.status(404).json({ message: "Order not found" });
@@ -188,7 +196,6 @@ exports.generateInvoice = async (req, res) => {
 
     const date = order.createdAt.toISOString().split("T")[0];
     const time = order.createdAt.toTimeString().split(" ")[0];
-    const customerAddress = `${order.customerId?.address?.addressLine1} ${order.customerId?.address?.addressLine2} ${order.customerId?.address?.city} ${order.customerId?.address?.state}-${order.customerId?.address?.pincode}`
 
     const html = invoiceTemplate({
       orderId,
@@ -198,7 +205,7 @@ exports.generateInvoice = async (req, res) => {
       qty: order.quantity,
       color: order.color || order.productId?.color || "",
       customerName: order.customerId?.name || "",
-      customerNumber: order.customerId?.mobile || "",
+      customerNumber: order.customerId?.mobileNo || "",
       price: order.productId?.price || 0,
       deliveryAddress: customerAddress || "",
       customerEmail: order.customerId?.email || ""
@@ -216,7 +223,7 @@ exports.generateInvoice = async (req, res) => {
     await browser.close();
 
     const filePath = `invoice/${orderId}.pdf`;
-    const s3Url = await uploadToS3(pdfBuffer, filePath);
+    const s3Url = await uploadToS3(pdfBuffer, filePath, orderId);
 
     // await sendEmail(order.customerId.email, order.customerId.name, filePath, pdfBuffer);
 
@@ -274,8 +281,49 @@ exports.generateInvoice = async (req, res) => {
 
 exports.getInvoice = async (req, res) => {
   try {
+    const { orderId } = req.params;
+
+    if (!orderId) {
+      return res.status(400).json({ success: false, error: "orderId is required" });
+    }
+
+    // Fetch order
+    const order = await Order.findById(orderId);
+    if (!order) {
+      return res.status(404).json({ success: false, error: "Order not found" });
+    }
+
+    if (!order.invoiceUrl) {
+      return res.status(400).json({ success: false, error: "Invoice not generated for this order" });
+    }
+
+    // Extract the S3 key from stored URL
+    const bucket = process.env.AWS_BUCKET_NAME;
+    const region = process.env.AWS_REGION;
+
+    // Example invoiceUrl:
+    // https://rehomifystores.s3.ap-south-1.amazonaws.com/invoices/123.pdf
+
+    const base = `https://${bucket}.s3.${region}.amazonaws.com/`;
+    const key = order.invoiceUrl.replace(base, "");
+
+    // Generate signed URL (15 min)
+    const signedUrl = await getSignedUrl(
+      s3,
+      new GetObjectCommand({
+        Bucket: bucket,
+        Key: key,
+      }),
+      { expiresIn: 900 }
+    );
+
+    return res.status(200).json({
+      success: true,
+      url: signedUrl,
+    });
 
   } catch (error) {
-
+    console.error("getInvoice error:", error);
+    return res.status(500).json({ success: false, error: "Internal server error" });
   }
-}
+};

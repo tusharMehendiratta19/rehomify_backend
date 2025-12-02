@@ -9,6 +9,7 @@ const orderSchema = new mongoose.Schema({
   isRefurbished: { type: Boolean, default: false },
   orderDate: { type: Date, default: Date.now },
   deliveryDate: { type: Date },
+  invoiceUrl: { type: String },
   status: {
     type: String,
     enum: ['placed', 'shipped', 'delivered', 'cancelled', "out for delivery"],
