@@ -89,7 +89,7 @@ router.post("/zoho-webhook", express.json(), async (req, res) => {
       { $set: { paymentStatus: event, paymentDetails: data } }
     );
 
-    if (event === "payment.success") {
+    if (event === "payment.succeeded") {
       await processInvoiceAndEmail(orderId);
     }
 
