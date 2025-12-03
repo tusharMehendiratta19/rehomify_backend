@@ -6,6 +6,7 @@ const authenticate = require('../middlewares/authenticate');
 // GET /api/orders
 router.get('/', orderController.getAllOrders);
 router.get('/:custId', orderController.getOrders);
+router.put('/:orderId', orderController.updateOrderStatus);
 router.post('/addOrder', orderController.addOrder);
 router.get("/getInvoice/:orderId", orderController.getInvoice)
 router.post("/generateInvoice", orderController.generateInvoice)

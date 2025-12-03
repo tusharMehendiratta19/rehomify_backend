@@ -12,7 +12,7 @@ const orderSchema = new mongoose.Schema({
   invoiceUrl: { type: String },
   status: {
     type: String,
-    enum: ['placed', 'shipped', 'delivered', 'cancelled', "out for delivery"],
+    enum: ['placed', "Rejected", "Processing", "Shipped", "Delivered"],
     default: 'placed'
   },
   paymentDetails: { type: Object },

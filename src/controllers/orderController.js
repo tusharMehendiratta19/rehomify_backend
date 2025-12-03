@@ -337,3 +337,50 @@ exports.getInvoice = async (req, res) => {
     return res.status(500).json({ success: false, error: "Internal server error" });
   }
 };
+
+exports.updateOrderStatus = async (req, res) => {
+  try {
+    const { orderId } = req.params;
+    const { status } = req.body;
+
+    if (!orderId) {
+      return res.status(400).json({ success: false, message: "orderId is required" });
+    }
+
+    if (!status) {
+      return res.status(400).json({ success: false, message: "status is required" });
+    }
+
+    const validStatuses = ["Rejected", "Processing", "Shipped", "Delivered"];
+
+    if (!validStatuses.includes(status)) {
+      return res.status(400).json({
+        success: false,
+        message: `Invalid status. Allowed: ${validStatuses.join(", ")}`
+      });
+    }
+
+    const updatedOrder = await Order.findByIdAndUpdate(
+      orderId,
+      { status },
+      { new: true }
+    );
+
+    if (!updatedOrder) {
+      return res.status(404).json({ success: false, message: "Order not found" });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Order status updated successfully",
+      order: updatedOrder
+    });
+
+  } catch (err) {
+    console.error("Update Order Status Error:", err);
+    res.status(500).json({
+      success: false,
+      message: "Internal server error"
+    });
+  }
+};
