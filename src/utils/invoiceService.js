@@ -1,13 +1,13 @@
 const Order = require("../models/Order");
 const puppeteer = require("puppeteer-core");
 const invoiceTemplate = require("../invoice/invoiceTemplate");
-const {uploadToS3} = require("./s3");
-const {sendEmail} = require("./email");
+const { uploadToS3 } = require("./s3");
+const { sendEmail } = require("./email");
 
 exports.processInvoiceAndEmail = async function (orderId) {
     try {
         if (!orderId) throw new Error("orderId is required");
-
+        console.log("processInvoiceAndEmail")
         const order = await Order.findById(orderId)
             .select("quantity createdAt productId customerId deliveryAddress color")
             .populate({
@@ -59,6 +59,7 @@ exports.processInvoiceAndEmail = async function (orderId) {
 
         // ------- Upload to S3 -------
         const filePath = `invoice/${orderId}.pdf`;
+        console.log("uploadToS3")
         const s3Url = await uploadToS3(pdfBuffer, filePath, orderId);
 
         // ------- Send Email -------

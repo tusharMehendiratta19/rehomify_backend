@@ -23,6 +23,8 @@ exports.uploadToS3 = async (buffer, fileName, orderId) => {
   );
 
   const url = `https://rehomifystores.s3.ap-south-1.amazonaws.com/${fileName}`
+  console.log("url: ", url)
+
   await Order.findByIdAndUpdate(
     orderId,
     { invoiceUrl: url },
