@@ -134,8 +134,8 @@ exports.addCustomerProduct = async (req, res) => {
       price // optional, depends on frontend
     } = req.body;
 
-    console.log('Request Body:', req.body);
-    console.log('Request Files:', req.files);
+    //console.log('Request Body:', req.body);
+    //console.log('Request Files:', req.files);
 
     const files = req.files || {};
     const mainImageFile = files.mainImage?.[0];
@@ -516,8 +516,8 @@ exports.addResellProduct = async (req, res) => {
     const { firstName, lastName, emailid, mobileNo, productName, category, description, addressline1, addressline2, pincode, landmark, price,
     } = req.body;
 
-    console.log("Request Body:", req.body);
-    console.log("Request Files:", req.files);
+    //console.log("Request Body:", req.body);
+    //console.log("Request Files:", req.files);
 
     const files = req.files || {};
     const cpImages = files.cpImages || [];

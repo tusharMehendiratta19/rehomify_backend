@@ -69,7 +69,7 @@ router.post("/zoho-webhook", express.json(), async (req, res) => {
     const event = req.body.event_type;
     const data = req.body.event_object.payment;
 
-    console.log("Webhook body:", req.body);
+    console.log("event", req.body.event_type);
 
     let custId = data.reference_number.split("-")[1];
 

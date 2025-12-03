@@ -14,7 +14,7 @@ function generateOtp() {
 
 exports.sendOtp = async (req, resp) => {
   const otp = generateOtp();
-  console.log("Generated OTP:", otp, typeof otp);
+  //console.log("Generated OTP:", otp, typeof otp);
 
   try {
     // ✅ Check if customer exists
@@ -44,7 +44,7 @@ exports.sendOtp = async (req, resp) => {
       }
     );
 
-    console.log("Fast2SMS Response:", result.data);
+    //console.log("Fast2SMS Response:", result.data);
 
     if (result.data.return) {
       // ✅ Update OTP in existing customer
@@ -78,19 +78,19 @@ exports.sendOtp = async (req, resp) => {
 exports.verifyOtp = async (req, res) => {
   try {
     const { mobileNo, otp } = req.body;
-    console.log("request body: ", req.body)
+    //console.log("request body: ", req.body)
     if (!mobileNo || !otp) {
       return res.status(400).json({ status: false, message: 'Mobile number and OTP are required.' });
     }
 
     const customer = await Customer.findOne({ mobileNo });
-    console.log("customer: ", customer)
+    //console.log("customer: ", customer)
     if (!customer) {
       return res.status(404).json({ status: false, message: 'Customer not found.' });
     }
 
     if (customer.otp && customer.otp.toString() === otp.toString()) {
-      // console.log("customer: ", customer)
+      // //console.log("customer: ", customer)
       const token = jwt.sign({ id: customer._id, role: customer.type }, JWT_SECRET);
       // Optionally clear OTP after verification
       // customer.otp = undefined;
@@ -253,7 +253,7 @@ exports.saveCustomerDetails = async (req, res) => {
     }
 
     const customer = await Customer.findById(id);
-    console.log(customer);
+    //console.log(customer);
     if (!customer) {
       return res.status(404).json({ message: 'Customer not found' });
     }

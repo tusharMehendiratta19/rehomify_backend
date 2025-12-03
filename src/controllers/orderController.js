@@ -80,19 +80,19 @@ exports.getOrders = async (req, res) => {
 
     // Step 1: Find orders for the customer and get all productIds
     const orders = await Order.find({ customerId }).select("productId quantity createdAt deliveryDate status");
-    console.log("orders: ", orders);
+    //console.log("orders: ", orders);
 
     if (!orders.length) {
       return res.status(404).json({ message: "No orders found for this customer" });
     }
 
     const productIds = orders.map(order => order.productId);
-    console.log("productIds: ", productIds);
+    //console.log("productIds: ", productIds);
 
     // Step 2: Fetch all matching products
     const products = await Product.find({ _id: { $in: productIds } }).select("category name description price image");
 
-    console.log("products: ", products);
+    //console.log("products: ", products);
 
     // Step 3: Create a map of productId to product for fast lookup
     const productMap = new Map();
@@ -139,7 +139,7 @@ exports.addOrder = async (req, res) => {
 
     // Find the product to get sellerId, isNew, isRefurbished
     const product = await Product.findById(productId);
-    console.log("product: ", product)
+    //console.log("product: ", product)
 
     if (!product) {
       return res.status(404).json({ message: "Product not found" });
@@ -198,7 +198,7 @@ exports.generateInvoice = async (req, res) => {
       } ${order.customerId?.address?.city || ""} ${order.customerId?.address?.state || ""
       }-${order.customerId?.address?.pinCode || ""}`;
 
-    console.log("POPULATED CUSTOMER:", order.customerId);
+    //console.log("POPULATED CUSTOMER:", order.customerId);
 
     if (!order) {
       return res.status(404).json({ message: "Order not found" });
@@ -244,7 +244,7 @@ exports.generateInvoice = async (req, res) => {
     });
 
   } catch (err) {
-    console.log(err);
+    //console.log(err);
     return res.status(500).json({ error: err.message });
   }
 };

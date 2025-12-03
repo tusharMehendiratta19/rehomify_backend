@@ -68,7 +68,7 @@ exports.editReview = async (req, res) => {
             { rating, comment },
             { new: true }
         );
-        console.log(updatedReview)
+        //console.log(updatedReview)
         if (!updatedReview) {
             return res.status(404).json({ success: false, error: "Review not found" });
         }

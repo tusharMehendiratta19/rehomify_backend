@@ -16,8 +16,8 @@ async function getAccessToken() {
       headers: { "Content-Type": "application/x-www-form-urlencoded" }
     });
 
-    console.log("🔑 New Access Token:", data.access_token);
-    console.log("⏳ Expires In:", data.expires_in, "seconds");
+    //console.log("🔑 New Access Token:", data.access_token);
+    //console.log("⏳ Expires In:", data.expires_in, "seconds");
 
     AUTH_TOKEN = data.access_token; // Update global token
 
@@ -45,7 +45,7 @@ exports.createPaymentSession = async (data) => {
     return res.data;
   } catch (err) {
     if (err.response && err.response.status === 401) {
-      console.log("⚠️ Access token expired — refreshing...");
+      //console.log("⚠️ Access token expired — refreshing...");
       await getAccessToken(); // refresh token
       const res = await axios.post(`${BASE_URL}/paymentsessions?account_id=${ACCOUNT_ID}`, data, {
         headers: buildHeaders()
@@ -67,7 +67,7 @@ exports.getPaymentSession = async (sessionId) => {
     return res.data;
   } catch (err) {
     if (err.response && err.response.status === 401) {
-      console.log("⚠️ Access token expired — refreshing...");
+      //console.log("⚠️ Access token expired — refreshing...");
       await getAccessToken(); // refresh token
       const res = await axios.get(`${BASE_URL}/paymentsessions/${sessionId}?account_id=${ACCOUNT_ID}`, { headers: buildHeaders() });
       return res.data;
@@ -86,7 +86,7 @@ exports.getPaymentDetails = async (paymentId) => {
     return res.data;
   } catch (err) {
     if (err.response && err.response.status === 401) {
-      console.log("⚠️ Access token expired — refreshing...");
+      //console.log("⚠️ Access token expired — refreshing...");
       await getAccessToken(); // refresh token
       const res = await axios.get(`${BASE_URL}/payments/${paymentId}?account_id=${ACCOUNT_ID}`, { headers: buildHeaders() });
       return res.data;
@@ -105,7 +105,7 @@ exports.getPaymentsList = async () => {
     return res.data
   } catch (err) {
     if (err.response && err.response.status === 401) {
-      console.log("⚠️ Access token expired — refreshing...");
+      //console.log("⚠️ Access token expired — refreshing...");
       await getAccessToken(); // refresh token
       const res = await axios.get(`${BASE_URL}/payments?account_id=${ACCOUNT_ID}`, { headers: buildHeaders() });
       return res.data;
@@ -124,7 +124,7 @@ exports.createPaymentLink = async (data) => {
     return res.data;
   } catch (err) {
     if (err.response && err.response.status === 401) {
-      console.log("⚠️ Access token expired — refreshing...");
+      //console.log("⚠️ Access token expired — refreshing...");
       await getAccessToken(); // refresh token
       const res = await axios.post(`${BASE_URL}/paymentlinks?account_id=${ACCOUNT_ID}`, data, { headers: buildHeaders() });
       return res.data;
@@ -143,7 +143,7 @@ exports.getPaymentLink = async (linkId) => {
     return res.data;
   } catch (err) {
     if (err.response && err.response.status === 401) {
-      console.log("⚠️ Access token expired — refreshing...");
+      //console.log("⚠️ Access token expired — refreshing...");
       await getAccessToken(); // refresh token
       const res = await axios.get(`${BASE_URL}/paymentlinks/${linkId}?account_id=${ACCOUNT_ID}`, { headers: buildHeaders() });
       return res.data;
