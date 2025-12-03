@@ -1,8 +1,8 @@
 const Order = require("../models/Order");
 const puppeteer = require("puppeteer-core");
 const invoiceTemplate = require("../invoice/invoiceTemplate");
-const uploadToS3 = require("./s3");
-const sendEmail = require("./email");
+const {uploadToS3} = require("./s3");
+const {sendEmail} = require("./email");
 
 exports.processInvoiceAndEmail = async function (orderId) {
     try {
