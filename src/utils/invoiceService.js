@@ -1,5 +1,5 @@
 const Order = require("../models/Order");
-const puppeteer = require("puppeteer");
+const puppeteer = require("puppeteer-core");
 const invoiceTemplate = require("../invoice/invoiceTemplate");
 const uploadToS3 = require("./s3");
 const sendEmail = require("./email");
@@ -47,6 +47,7 @@ exports.processInvoiceAndEmail = async function (orderId) {
 
         // ------- Generate PDF -------
         const browser = await puppeteer.launch({
+            executablePath: "/usr/bin/chromium-browser",
             headless: "new",
             args: ["--no-sandbox", "--disable-setuid-sandbox"]
         });
