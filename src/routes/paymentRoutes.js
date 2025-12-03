@@ -3,7 +3,7 @@ const router = express.Router();
 const zohoService = require("../controllers/paymentController");
 const Order = require("../models/Order")
 const Customer = require("../models/Customer")
-
+const { processInvoiceAndEmail } = require("../utils/invoiceService");
 // Create Payment Session
 router.post("/payment-session", async (req, res) => {
   try {
@@ -68,45 +68,37 @@ router.post("/zoho-webhook", express.json(), async (req, res) => {
   try {
     const event = req.body.event_type;
     const data = req.body.event_object.payment;
-    console.log("webhood request body: ", req.body)
-    let custId = data.reference_number.split("-")
-    custId = custId[1]
-    console.log(custId)
 
-    let customerResult = await Customer.findOne({ _id: custId }, { orders: 1 })
+    console.log("Webhook body:", req.body);
 
-    if (!customerResult) {
-      console.log("Customer not found");
+    let custId = data.reference_number.split("-")[1];
+
+    const customer = await Customer.findById(custId, { orders: 1 });
+
+    if (!customer) {
       return res.send({
         status: false,
         message: "Customer not found"
-      })
-    } else {
-      // console.log(customerResult.orders);
-      let orderId = customerResult.orders[customerResult.orders.length - 1]
-
-      let orderResp = await Order.updateOne(
-        { _id: orderId },
-        { $set: { paymentStatus: event, paymentDetails: data } }
-      );
-
-      if (!orderResp) {
-        return res.send({
-          status: false
-        })
-      } else {
-        return res.send({
-          status: true,
-          message: "Order placed successfully",
-          data: [orderId, data.status, data.payment_id]
-        })
-      }
+      });
     }
 
+    const orderId = customer.orders[customer.orders.length - 1];
 
+    await Order.updateOne(
+      { _id: orderId },
+      { $set: { paymentStatus: event, paymentDetails: data } }
+    );
 
+    if (event === "payment.success") {
+      await processInvoiceAndEmail(orderId);
+    }
 
-    res.sendStatus(200);
+    return res.send({
+      status: true,
+      message: "Order updated",
+      data: [orderId, data.status, data.payment_id]
+    });
+
   } catch (err) {
     console.error("Webhook error:", err);
     res.sendStatus(500);

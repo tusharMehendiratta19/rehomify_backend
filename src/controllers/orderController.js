@@ -235,7 +235,7 @@ exports.generateInvoice = async (req, res) => {
     const filePath = `invoice/${orderId}.pdf`;
     const s3Url = await uploadToS3(pdfBuffer, filePath, orderId);
 
-    // await sendEmail(order.customerId.email, order.customerId.name, filePath, pdfBuffer);
+    await sendEmail(order.customerId.email, order.customerId.name, filePath, pdfBuffer);
 
     return res.json({
       success: true,
