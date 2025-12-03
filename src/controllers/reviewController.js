@@ -14,6 +14,41 @@ exports.getAllReviews = async (req, res) => {
     }
 };
 
+exports.getReviewById = async (req, res) => {
+    try {
+        const { orderId } = req.body;
+
+        if (!orderId) {
+            return res.status(400).json({
+                success: false,
+                error: "orderId is required"
+            });
+        }
+
+        const review = await Review.findOne({ orderId })
+            .select("custId orderId rating review");
+
+        if (!review) {
+            return res.status(404).json({
+                success: false,
+                error: "No review found for this orderId"
+            });
+        }
+
+        return res.status(200).json({
+            success: true,
+            data: review
+        });
+    } catch (err) {
+        console.error("Error fetching review:", err);
+        return res.status(500).json({
+            success: false,
+            error: err.message
+        });
+    }
+};
+
+
 exports.createReview = async (req, res) => {
     try {
         const { custId, orderId, rating, review } = req.body;
