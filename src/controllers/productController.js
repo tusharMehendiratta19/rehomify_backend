@@ -218,7 +218,8 @@ exports.getAllcatProducts = async (req, res) => {
       price: 1,
       color: 1,
       image: 1,
-      deliveryTime: 1
+      deliveryTime: 1,
+      varieties: 1
     });
 
     // const categorizedProducts = {};
@@ -327,7 +328,7 @@ exports.getProductById = async (req, res) => {
       description: product.description,
       deliveryTime: product.deliveryTime,
       category: product.category,
-      price: product.price,
+      price: product.varieties.length > 0 ? product.varieties[0].price : product.price,
       color: product.color,
       image: product.image
     });
