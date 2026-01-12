@@ -16,7 +16,9 @@ const orderSchema = new mongoose.Schema({
     default: 'placed'
   },
   paymentDetails: { type: Object },
-  paymentStatus: { type: String }
+  paymentStatus: { type: String },
+  isResellRequested: { type: Boolean, default: false },
+  resellOrderId: { type: mongoose.Schema.Types.ObjectId, ref: 'ResellOrder' }
 }, { timestamps: true });
 
 module.exports = mongoose.model('Order', orderSchema);
