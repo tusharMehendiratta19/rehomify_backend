@@ -79,7 +79,7 @@ exports.getOrders = async (req, res) => {
     }
 
     // Step 1: Find orders for the customer and get all productIds
-    const orders = await Order.find({ customerId }).select("productId quantity createdAt deliveryDate status isResellRequested");
+    const orders = await Order.find({ customerId }).select("productId quantity createdAt deliveryDate status isResellRequested paymentStatus");
     //console.log("orders: ", orders);
 
     if (!orders.length) {
@@ -118,7 +118,8 @@ exports.getOrders = async (req, res) => {
           price: product.price,
           imageUrl: product.image,
         } : null,
-        isResellRequested: order.isResellRequested || false
+        isResellRequested: order.isResellRequested || false,
+        paymentStatus: order.paymentStatus || 'pending'
       };
     });
 

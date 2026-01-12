@@ -62,12 +62,12 @@ exports.addResellOrder = async (req, res) => {
 
     const resellOrder = await newResellOrder.save();
     if (!resellOrder) {
-      return res.status(500).json({ error: 'Failed to create resell order' });
+      return res.status(500).json({ success: false, error: 'Failed to create resell order' });
     }
     else {
       await Order.findByIdAndUpdate(orderId, { resellOrderId: resellOrder._id, isResellRequested: true });
     }
-    return res.status(201).json({ message: 'Resell order created successfully', resellOrderId: newResellOrder._id });
+    return res.status(201).json({ success: true, message: 'Resell order created successfully', resellOrderId: newResellOrder._id, data: resellOrder });
   } catch (err) {
     return res.status(500).json({ error: err.message });
   }
@@ -121,7 +121,7 @@ exports.updateResellOrderStatus = async (req, res) => {
   try {
     const { resellOrderId } = req.params;
     const { status } = req.body;
-    const validStatuses = ['Requested', 'Accepted', 'Rejected', 'Completed'];
+    const validStatuses = ['Requested', 'Accepted', 'Rejected', 'Completed', "Cancelled"];
 
     if (!validStatuses.includes(status)) {
       return res.status(400).json({ error: 'Invalid status value' });

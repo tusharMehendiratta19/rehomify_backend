@@ -13,7 +13,7 @@ const resellOrderSchema = new mongoose.Schema({
     price: Number,
     imageUrl: String
   },
-  status: { type: String, enum: ['Requested', 'Accepted', 'Rejected', 'Completed'], default: 'Requested' }
+  status: { type: String, enum: ['Requested', 'Accepted', 'Rejected', 'Completed', 'Cancelled'], default: 'Requested' }
 }, { timestamps: true });
 
 module.exports = mongoose.model('ResellOrder', resellOrderSchema);
