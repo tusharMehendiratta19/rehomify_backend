@@ -54,7 +54,7 @@ exports.addProduct = async (req, res) => {
     // Validation
     if (
       !sellerId || !name || !description || !category || !color ||
-      !isRefurbished || !width || !length || !height || !woodMaterial || !mainImageFile || colorCode ||
+      !isRefurbished || !width || !length || !height || !woodMaterial || !mainImageFile ||
       parsedVarieties.length === 0
     ) {
       return res.status(400).json({ message: 'All fields including main image and varieties are required' });
@@ -260,6 +260,7 @@ exports.getAllProducts = async (req, res) => {
         description: 1,
         price: 1,
         color: 1,
+        colorCode: 1,
         image: 1,
         deliveryTime: 1,
         width: 1,
@@ -292,6 +293,7 @@ exports.getAllProducts = async (req, res) => {
         category: product.category,
         price: product.price,
         color: product.color,
+        colorCode: product.colorCode || '',
         image: product.image,
         width: product.width,
         height: product.height,
@@ -330,6 +332,9 @@ exports.getProductById = async (req, res) => {
       category: product.category,
       price: product.varieties.length > 0 ? product.varieties[0].price : product.price,
       color: product.color,
+      colorCode: product.colorCode || '',
+      width: product.width,
+      height: product.height,
       image: product.image
     });
   } catch (err) {
@@ -378,6 +383,7 @@ exports.editProductById = async (req, res) => {
       description: product.description,
       price: product.price,
       color: product.color,
+      colorCode: product.colorCode || '',
       width: product.width,
       woodMaterial: product.woodMaterial,
       length: product.length,
@@ -413,6 +419,7 @@ exports.updatedProductById = async (req, res) => {
       description,
       category,
       color,
+      colorCode,
       width,
       length,
       height,
@@ -422,7 +429,7 @@ exports.updatedProductById = async (req, res) => {
 
     // Validation
     if (
-      !name || !description || !varieties || !category || !color || !width || !length || !height || !woodMaterial
+      !name || !description || !varieties || !category || !color || !width || !length || !height || !woodMaterial || !colorCode
     ) {
       return res.status(400).json({ message: 'All fields are required' });
     }
@@ -457,6 +464,7 @@ exports.updatedProductById = async (req, res) => {
     // product.price = price;
     product.category = category;
     product.color = color;
+    product.colorCode = colorCode;
     product.width = parseFloat(width);
     product.height = parseFloat(height);
     product.length = parseFloat(length);
